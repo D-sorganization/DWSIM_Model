@@ -1,20 +1,24 @@
 import os
 import sys
+
 import pytest
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
 from dwsim_model.core import FlowsheetBuilder
+
 
 def test_builder_init():
     builder = FlowsheetBuilder()
     assert builder.sim is not None
 
+
 def test_builder_add_compound():
     builder = FlowsheetBuilder()
     builder.add_compound("Methane")
     builder.add_compound("Oxygen")
-    assert len(list(builder.sim.GetCompoundList())) == 2
+    assert len(list(builder.sim.SelectedCompounds.Values)) == 2
+
 
 def test_builder_property_package():
     builder = FlowsheetBuilder()

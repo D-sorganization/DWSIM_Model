@@ -1,35 +1,40 @@
-from collections.abc import Mapping
-import sys
 import os
+import sys
+from collections.abc import Mapping
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+)
 
 from dwsim_model.core import FlowsheetBuilder
+
 
 def test_add_compounds():
     builder = FlowsheetBuilder()
     builder.add_compound("Methane")
     assert "Methane" in [c.Name for c in builder.sim.SelectedCompounds.Values]
 
+
 def test_add_property_package():
     builder = FlowsheetBuilder()
     pkg = builder.add_property_package("Peng-Robinson (PR)")
     assert pkg is not None
-    # PropertyPackages on sim itself are usually dictionaries in older versions, 
+    # PropertyPackages on sim itself are usually dictionaries in older versions,
     # but might just be in the solver
     assert len(builder.sim.PropertyPackages) > 0
 
+
 def test_create_operations():
     builder = FlowsheetBuilder()
-    
+
     # Material Streams
     ms = builder.add_object("MaterialStream", "FeedStream")
     assert builder.materials["FeedStream"] is not None
-    
+
     # 1. Downdraft Gasifier -> RCT_Conversion or similar
     gd = builder.add_object("RCT_Conversion", "Downdraft_Gasifier")
     assert builder.operations["Downdraft_Gasifier"] is not None
-    
+
     # 2. PEM -> Equilibrium Reactor
     pem = builder.add_object("RCT_Equilibrium", "PEM")
     assert builder.operations["PEM"] is not None
