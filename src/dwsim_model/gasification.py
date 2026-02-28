@@ -1,7 +1,16 @@
 import logging
+from enum import Enum
 from dwsim_model.core import FlowsheetBuilder
 
 logger = logging.getLogger(__name__)
+
+
+class ReactorMode(str, Enum):
+    MIXED = "mixed"  # Gasifier: Conversion, PEM: Equilibrium, TRC: PFR
+    KINETIC = "kinetic"  # All: PFR
+    EQUILIBRIUM = "equilibrium"  # All: Equilibrium
+    CONVERSION = "conversion"  # All: Conversion
+    CUSTOM = "custom"  # Defined via a dictionary
 
 
 class GasificationFlowsheet:
@@ -18,9 +27,45 @@ class GasificationFlowsheet:
     - Blower/Compressor (Compressor)
     """
 
-    def __init__(self, builder: FlowsheetBuilder | None = None):
+    def __init__(
+        self,
+        builder: FlowsheetBuilder | None = None,
+        mode: ReactorMode | str = ReactorMode.MIXED,
+        custom_reactors: dict[str, str] | None = None,
+    ):
         self.builder = builder or FlowsheetBuilder()
+        self.mode = ReactorMode(mode)
+        self.custom_reactors = custom_reactors or {}
         self._is_built = False
+
+    def _get_reactor_types(self) -> dict[str, str]:
+        """Returns the DWSIM ObjectType string for each reactor based on mode."""
+        if self.mode == ReactorMode.CUSTOM:
+            return {
+                "gasifier": self.custom_reactors.get("gasifier", "RCT_Conversion"),
+                "pem": self.custom_reactors.get("pem", "RCT_Equilibrium"),
+                "trc": self.custom_reactors.get("trc", "RCT_PFR"),
+            }
+        elif self.mode == ReactorMode.KINETIC:
+            return {"gasifier": "RCT_PFR", "pem": "RCT_PFR", "trc": "RCT_PFR"}
+        elif self.mode == ReactorMode.EQUILIBRIUM:
+            return {
+                "gasifier": "RCT_Equilibrium",
+                "pem": "RCT_Equilibrium",
+                "trc": "RCT_Equilibrium",
+            }
+        elif self.mode == ReactorMode.CONVERSION:
+            return {
+                "gasifier": "RCT_Conversion",
+                "pem": "RCT_Conversion",
+                "trc": "RCT_Conversion",
+            }
+        else:  # MIXED
+            return {
+                "gasifier": "RCT_Conversion",
+                "pem": "RCT_Equilibrium",
+                "trc": "RCT_PFR",
+            }
 
     def setup_thermo(self) -> None:
         """Sets up thermodynamics and compounds. DbC: Builder must exist."""
@@ -48,18 +93,19 @@ class GasificationFlowsheet:
             return
 
         b = self.builder
+        rtypes = self._get_reactor_types()
 
         # 1. Downdraft Gasifier
         feed = b.add_object("MaterialStream", "Biomass_Feed")
-        gasifier = b.add_object("RCT_Conversion", "Downdraft_Gasifier")
+        gasifier = b.add_object(rtypes["gasifier"], "Downdraft_Gasifier")
 
         # 2. PEM
         s1 = b.add_object("MaterialStream", "Syngas_Pre_PEM")
-        pem = b.add_object("RCT_Equilibrium", "PEM_Reactor")
+        pem = b.add_object(rtypes["pem"], "PEM_Reactor")
 
         # 3. TRC
         s2 = b.add_object("MaterialStream", "Syngas_Pre_TRC")
-        trc = b.add_object("RCT_PFR", "TRC_Reactor")
+        trc = b.add_object(rtypes["trc"], "TRC_Reactor")
 
         # 4. Quench Vessel (Evaporative Cooling via Mixer)
         s3 = b.add_object("MaterialStream", "Syngas_Pre_Quench")

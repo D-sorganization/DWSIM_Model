@@ -1,21 +1,20 @@
 import os
 import sys
-
 import pytest
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
 
+from dwsim_model.gasification import GasificationFlowsheet, ReactorMode
 from dwsim_model.core import FlowsheetBuilder
-from dwsim_model.gasification import GasificationFlowsheet
 
 
 @pytest.fixture(scope="module")
 def flowsheet():
     """Module-scoped flowsheet instance to prevent multiple Initialization issues"""
     b = FlowsheetBuilder()
-    gf = GasificationFlowsheet(builder=b)
+    gf = GasificationFlowsheet(builder=b, mode=ReactorMode.MIXED)
     return gf
 
 
@@ -56,3 +55,22 @@ def test_flowsheet_run_does_not_crash(flowsheet):
     # Simply assert run completes without fatal program error.
     flowsheet.run()
     assert flowsheet._is_built
+
+
+def test_custom_reactor_modes():
+    """Test logic for alternative reactor modes."""
+    # Test Equilibrium Mode
+    gf_eq = GasificationFlowsheet(mode=ReactorMode.EQUILIBRIUM)
+    rtypes_eq = gf_eq._get_reactor_types()
+    assert rtypes_eq["gasifier"] == "RCT_Equilibrium"
+    assert rtypes_eq["pem"] == "RCT_Equilibrium"
+    assert rtypes_eq["trc"] == "RCT_Equilibrium"
+
+    # Test Custom mode
+    custom_dict = {"gasifier": "RCT_Conversion", "pem": "RCT_Gibbs", "trc": "RCT_PFR"}
+    gf_custom = GasificationFlowsheet(
+        mode=ReactorMode.CUSTOM, custom_reactors=custom_dict
+    )
+    rtypes_custom = gf_custom._get_reactor_types()
+    assert rtypes_custom["pem"] == "RCT_Gibbs"
+    assert rtypes_custom["gasifier"] == "RCT_Conversion"
