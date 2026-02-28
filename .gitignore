@@ -1,0 +1,60 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+.ipynb_checkpoints/
+.coverage
+*.coverage
+
+# MATLAB/Simulink
+*.asv
+*.m~
+slprj/
+*sldd
+*.slxc
+*.autosave
+*.mex*
+
+# Arduino
+arduino/.pio/
+arduino/.vscode/
+*.hex
+*.elf
+*.eep
+*.bin
+
+# IDE
+*.cursor-chat
+.vscode/
+.idea/
+
+# JavaScript/TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+dist/
+build/
+coverage/
+.nyc_output/
+*.tgz
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data & Outputs
+data/raw/
+output/**/temp/
+logs/
+*.log
+
+# Binary models/data via LFS
+*.h5
+*.zip
+python/coverage.xml

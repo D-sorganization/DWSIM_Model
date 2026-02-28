@@ -1,0 +1,80 @@
+version: 2
+
+# Dependabot configuration - Security-focused to prevent version creep
+# Only auto-update patch versions, group minor/major updates
+
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/python"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    # Group all patch updates into a single PR
+    groups:
+      python-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+    # Limit open PRs to prevent spam
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "python"
+      - "auto-merge-candidate"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Security updates are always immediate
+    versioning-strategy: increase-if-necessary
+
+  # JavaScript/NPM dependencies
+  - package-ecosystem: "npm"
+    directory: "/javascript"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    groups:
+      npm-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "javascript"
+      - "auto-merge-candidate"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    versioning-strategy: increase-if-necessary
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "monday"
+      time: "09:00"
+    groups:
+      github-actions-patches:
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+          - "minor"
+    open-pull-requests-limit: 3
+    labels:
+      - "dependencies"
+      - "ci/cd"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+
+# Security-only updates are processed immediately via versioning-strategy
+# Routine updates are grouped weekly to minimize noise

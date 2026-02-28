@@ -1,0 +1,76 @@
+# =============================================================================
+# PR Size Check Workflow
+# =============================================================================
+# Prevents "Deceptive Dump" patterns by enforcing size limits on PRs.
+# PRs exceeding 1000 lines (excluding lockfiles/assets) require manual approval.
+#
+# Reference: Jan 12, 2026 Integrity Audit (Assessment O-001)
+# =============================================================================
+
+name: PR Size Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  check-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate PR diff size
+        id: diff-size
+        run: |
+          # Get the diff between base and head, excluding lockfiles and assets
+          DIFF_LINES=$(git diff --stat origin/${{ github.base_ref }}...HEAD -- \
+            ':!*.lock' ':!*.pdf' ':!*.png' ':!*.jpg' ':!*.gif' ':!*.ico' \
+            ':!*.woff' ':!*.woff2' ':!*.ttf' ':!*.eot' ':!*.svg' \
+            ':!package-lock.json' ':!poetry.lock' ':!Pipfile.lock' \
+            ':!*.ipynb' \
+            | tail -1 | awk '{print $4}' | tr -d ',')
+
+          # Default to 0 if no changes
+          DIFF_LINES=${DIFF_LINES:-0}
+
+          echo "diff_lines=$DIFF_LINES" >> $GITHUB_OUTPUT
+          echo "📊 PR diff size: $DIFF_LINES lines (excluding lockfiles/assets)"
+
+      - name: Check size threshold
+        run: |
+          THRESHOLD=1000
+          DIFF_SIZE=${{ steps.diff-size.outputs.diff_lines }}
+
+          if [ "$DIFF_SIZE" -gt "$THRESHOLD" ]; then
+            echo "⚠️ WARNING: This PR has $DIFF_SIZE lines changed (threshold: $THRESHOLD)"
+            echo ""
+            echo "Large PRs are flagged to prevent 'Deceptive Dump' anti-patterns."
+            echo "Please consider splitting into smaller, focused PRs."
+            echo ""
+            echo "If this is intentional (e.g., major feature, generated code),"
+            echo "add the 'large-pr-approved' label to bypass this check."
+            
+            # Check for bypass label before failing
+            LABELS="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+            if [[ "$LABELS" == *"large-pr-approved"* ]]; then
+              echo "✅ Large PR approved via label - bypassing size check"
+              exit 0
+            else
+              echo "❌ No bypass label found - failing size check"
+              exit 1
+            fi
+          else
+            echo "✅ PR size is within limits: $DIFF_SIZE lines"
+          fi
+
+      - name: Check for bypass label
+        if: failure()
+        run: |
+          LABELS="${{ join(github.event.pull_request.labels.*.name, ',') }}"
+          if [[ "$LABELS" == *"large-pr-approved"* ]]; then
+            echo "✅ Large PR approved via label"
+            exit 0
+          fi
