@@ -24,7 +24,7 @@ jobs:
         run: black --check .
 
       - run: pip install mypy types-PyYAML types-requests
-      - run: pip install -r requirements.txt
+      - run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       - run: mypy . --ignore-missing-imports || echo "::warning::Type checking has issues"
 
   tests:
@@ -36,7 +36,7 @@ jobs:
         with:
           python-version: "3.11"
           
-      - run: pip install -r requirements.txt
+      - run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
       
       - name: Download DWSIM (Requires local setup script or cached dlls)
         run: |
