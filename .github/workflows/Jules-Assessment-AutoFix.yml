@@ -64,7 +64,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install ruff black mypy pytest pytest-cov pip-audit bandit
 
       - name: Run Assessment A (Architecture)
@@ -234,7 +234,7 @@ jobs:
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install -r requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install ruff black mypy pip-tools
 
       - name: Create fix branch
@@ -266,7 +266,7 @@ jobs:
           pip install pip-tools
 
           # Generate lock file
-          pip-compile requirements.txt -o requirements-lock.txt
+          if [ -f requirements.txt ]; then pip-compile requirements.txt -o requirements-lock.txt; fi
 
           # Create .env.example if missing
           if [ ! -f .env.example ]; then
