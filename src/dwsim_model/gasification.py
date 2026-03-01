@@ -184,7 +184,7 @@ class GasificationFlowsheet:
         # 1. Configure Downdraft Gasifier (RCT_Conversion)
         # Note: In a UI, users should set stoichiometric conversion factors mapping biomass to syngas
         if "Downdraft_Gasifier" in ops:
-            gasifier = ops["Downdraft_Gasifier"]
+            _gasifier = ops["Downdraft_Gasifier"]
             # To-Do: Programmatically add specific Conversion Reactions via DWSIM Simulation Data
             # e.g., Biomass -> a*CO + b*H2 + c*CH4 + d*CO2
             pass
@@ -192,13 +192,13 @@ class GasificationFlowsheet:
         # 2. Configure PEM (RCT_Equilibrium)
         # Note: Operates via Minimization of Gibbs Free Energy or distinct Equilibrium Reactions
         if "PEM_Reactor" in ops:
-            pem = ops["PEM_Reactor"]
+            _pem = ops["PEM_Reactor"]
             # To-Do: Configure isothermal operation and add WGS/Methanation equilibrium reactions.
             pass
 
         # 3. Configure TRC (RCT_PFR)
         if "TRC_Reactor" in ops:
-            trc = ops["TRC_Reactor"]
+            _trc = ops["TRC_Reactor"]
             # Set default volume/length (requires DWSIM property setters mapped to .NET types)
             # trc.Volume = 2.0  # m3
             # trc.Length = 5.0  # m
