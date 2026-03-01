@@ -58,3 +58,4 @@ logs/
 *.h5
 *.zip
 python/coverage.xml
+docs/api/_build
