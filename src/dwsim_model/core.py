@@ -5,7 +5,10 @@ _interf = None
 _ObjectType = None
 
 
-def get_automation(dwsim_path: str = r"C:\Users\diete\AppData\Local\DWSIM"):
+def get_automation(dwsim_path: str = None):
+    if dwsim_path is None:
+        dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
+
     global _interf, _ObjectType
     if _interf is not None:
         return _interf, _ObjectType
@@ -37,7 +40,7 @@ class FlowsheetBuilder:
     Wrapper for DWSIM Automation3 to build the Gasification Process.
     """
 
-    def __init__(self, dwsim_path: str = r"C:\Users\diete\AppData\Local\DWSIM"):
+    def __init__(self, dwsim_path: str = None):
         self.interf, self.ObjectType = get_automation(dwsim_path)
 
         self.sim = self.interf.CreateFlowsheet()
