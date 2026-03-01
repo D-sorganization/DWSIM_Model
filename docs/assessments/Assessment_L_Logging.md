@@ -1,5 +1,6 @@
 # Assessment L_Logging
 
-**Grade: 6/10**
+## Grade: 7/10
 
-The `logging` module is used appropriately instead of `print()` statements (e.g., `logger.warning("Connection layout partial due to: {e}")`), but usage is sparse.
+### Assessment Notes
+- Uses the standard `logging` library (`logger = logging.getLogger(__name__)`) in `gasification.py` instead of print statements, adhering to `AGENTS.md` rules.

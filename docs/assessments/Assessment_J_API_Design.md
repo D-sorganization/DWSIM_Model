@@ -1,5 +1,6 @@
 # Assessment J_API_Design
 
-**Grade: 7/10**
+## Grade: 7/10
 
-The `FlowsheetBuilder` API is clean and well-structured, encapsulating complex DWSIM .NET object creation behind simple Python methods like `add_compound` and `add_property_package`.
+### Assessment Notes
+- `FlowsheetBuilder` provides a clear, stateful wrapper around DWSIM's `.NET` classes. Enum `ReactorMode` provides a clean interface for configuration.

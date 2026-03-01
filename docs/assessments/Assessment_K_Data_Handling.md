@@ -1,5 +1,6 @@
 # Assessment K_Data_Handling
 
-**Grade: 7/10**
+## Grade: 6/10
 
-Data passed to the DWSIM engine is handled natively. No heavy data processing is currently implemented on the Python side.
+### Assessment Notes
+- Data flows through streams (`materials`, `energy_streams`) effectively. Lacking persistent data storage or data validation schemas for inputs.

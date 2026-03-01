@@ -1,5 +1,6 @@
 # Assessment E_Performance
 
-**Grade: 8/10**
+## Grade: 7/10
 
-The current wrapper approach avoids unnecessary data duplication. The wrapper itself introduces negligible overhead compared to the underlying DWSIM .NET solver.
+### Assessment Notes
+- Performance relies heavily on DWSIM solver. The singleton approach (`global _interf`) for initializing the .NET Automation layer avoids redundant load times, which is a good optimization.
