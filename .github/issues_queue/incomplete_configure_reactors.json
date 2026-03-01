@@ -1,0 +1,4 @@
+{
+  "title": "Complete `_configure_reactors` Implementation in GasificationFlowsheet",
+  "body": "The `GasificationFlowsheet` class currently has incomplete configuration logic for the reactors. Specifically, the method `_configure_reactors` contains multiple `pass` statements and `To-Do` comments indicating missing implementation for programmatic parameter settings of the `Downdraft Gasifier`, `PEM`, and `TRC`.\n\nAdditionally, variables within this method were prefixed with an underscore (`_gasifier`, `_pem`, `_trc`) to bypass linting errors (`flake8`/`ruff`), which obscured the incomplete state of the code.\n\n**Action Items:**\n1. Implement programmatic configuration for the Downdraft Gasifier.\n2. Implement isothermal configuration and add equilibrium reactions for the PEM Reactor.\n3. Set default properties like `Volume` and `Length` for the TRC Reactor."
+}
