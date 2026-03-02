@@ -1,6 +1,5 @@
-# Assessment B: Documentation
+# Assessment B_Documentation
 
-**Grade:** 6/10
+**Grade: 6/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+Basic docstrings exist for classes and functions. `README.md` is present but is mostly boilerplate from a template repository. Needs specific documentation for `dwsim_model` usage and architecture.

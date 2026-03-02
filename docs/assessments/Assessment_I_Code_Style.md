@@ -1,6 +1,5 @@
-# Assessment I: Code Style
+# Assessment I_Code_Style
 
-**Grade:** 9/10
+**Grade: 8/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+Code adheres to PEP 8. The use of Type Hinting is consistent across function arguments and return types (e.g., `-> object`, `-> None`).

@@ -1,6 +1,5 @@
-# Assessment N: Scalability
+# Assessment N_Scalability
 
-**Grade:** 7/10
+**Grade: 6/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+The wrapper supports building arbitrarily complex flowsheets by adding streams and reactors iteratively. The main bottleneck is the DWSIM solver itself.

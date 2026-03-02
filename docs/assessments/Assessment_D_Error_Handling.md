@@ -1,6 +1,5 @@
-# Assessment D: Error Handling
+# Assessment D_Error_Handling
 
-**Grade:** 8/10
+**Grade: 6/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+Good use of `try/except` blocks in `core.py` when attempting to load property packages or create flowsheets. Errors raised are clear `ValueError` or `RuntimeError` instances with context.

@@ -1,6 +1,5 @@
-# Assessment A: Code Structure
+# Assessment A_Code_Structure
 
-**Grade:** 8/10
+**Grade: 7/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+The project uses standard Python structures and directories, separated clearly into `src/` and `tests/`. It has clear wrapper implementations around the .NET library DWSIM.

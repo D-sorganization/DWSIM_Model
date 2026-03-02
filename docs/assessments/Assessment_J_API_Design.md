@@ -1,6 +1,5 @@
-# Assessment J: API Design
+# Assessment J_API_Design
 
-**Grade:** 8/10
+**Grade: 7/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+The `FlowsheetBuilder` API is clean and well-structured, encapsulating complex DWSIM .NET object creation behind simple Python methods like `add_compound` and `add_property_package`.

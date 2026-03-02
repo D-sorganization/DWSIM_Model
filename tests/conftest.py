@@ -5,60 +5,58 @@ from unittest.mock import MagicMock
 
 import pytest
 
-sys.path.insert(
-    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
-)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
-clr_available = importlib.util.find_spec("clr") is not None
+import dwsim_model.core
 
-if not clr_available:
-    sys.modules["clr"] = MagicMock()
+# Only mock if clr cannot be imported or runtime fails (e.g. non-Windows or mono not installed)
+try:
+    import clr
+except (ModuleNotFoundError, RuntimeError):
+    # Mock get_automation directly to return MagicMocks
+    def mock_get_automation(dwsim_path=""):
+        interf = MagicMock()
+        sim = MagicMock()
+        interf.CreateFlowsheet.return_value = sim
 
-    # Mock get_automation
-    def mock_get_automation(dwsim_path=None):
-        mock_interf = MagicMock()
-        mock_interf.AvailablePropertyPackages = {"Peng-Robinson (PR)": MagicMock()}
+        interf.AvailablePropertyPackages = {"Peng-Robinson (PR)": MagicMock()}
 
-        mock_obj_type = MagicMock()
-        mock_obj_type.MaterialStream = MagicMock()
+        sim.SelectedCompounds.Values = []
 
-        return mock_interf, mock_obj_type
+        def add_compound(name):
+            mock_c = MagicMock()
+            mock_c.Name = name
+            sim.SelectedCompounds.Values.append(mock_c)
+            return mock_c
 
-    # Needs to patch early before test collection starts instantiating FlowsheetBuilder
-    import dwsim_model.core as core
+        sim.AddCompound.side_effect = add_compound
 
-    core.get_automation = mock_get_automation
+        sim.PropertyPackages = MagicMock()
+        sim.PropertyPackages.__len__.return_value = 1
+        sim.PropertyPackages.Values = []
 
-    # Patch FlowsheetBuilder to handle compound addition/counting in mocks
-    original_init = core.FlowsheetBuilder.__init__
-    original_add_pp = core.FlowsheetBuilder.add_property_package
+        def add_property_package(pack):
+            sim.PropertyPackages.Values.append(pack)
+            return pack
 
-    def patched_init(self, dwsim_path=None):
-        original_init(self, dwsim_path)
+        sim.AddPropertyPackage.side_effect = add_property_package
 
-        self._mock_compounds = []
+        # ObjectType mock
+        class ObjectType:
+            MaterialStream = "MaterialStream"
+            EnergyStream = "EnergyStream"
+            RCT_Conversion = "RCT_Conversion"
+            RCT_Equilibrium = "RCT_Equilibrium"
+            RCT_PFR = "RCT_PFR"
+            Vessel = "Vessel"
+            Mixer = "Mixer"
+            SolidSeparator = "SolidSeparator"
+            ComponentSeparator = "ComponentSeparator"
+            Compressor = "Compressor"
 
-        def mock_add_compound(name):
-            self._mock_compounds.append(MagicMock(Name=name))
+        return interf, ObjectType
 
-        self.sim.SelectedCompounds.Values = self._mock_compounds
-        self.add_compound = mock_add_compound
-
-        self._mock_packages = []
-        mock_pp = MagicMock()
-        type(mock_pp).Values = property(lambda self_mock: self._mock_packages)
-        mock_pp.__iter__ = lambda x: iter(self._mock_packages)
-        mock_pp.__len__ = lambda x: len(self._mock_packages)
-
-        self.sim.PropertyPackages = mock_pp
-
-    def patched_add_pp(self, package_name="Peng-Robinson (PR)"):
-        pkg = original_add_pp(self, package_name)
-        self._mock_packages.append(pkg)
-        return pkg
-
-    core.FlowsheetBuilder.__init__ = patched_init
-    core.FlowsheetBuilder.add_property_package = patched_add_pp
+    dwsim_model.core.get_automation = mock_get_automation
 
 
 def pytest_collection_modifyitems(config, items):

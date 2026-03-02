@@ -1,6 +1,5 @@
-# Assessment E: Performance
+# Assessment E_Performance
 
-**Grade:** 7/10
+**Grade: 8/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+The current wrapper approach avoids unnecessary data duplication. The wrapper itself introduces negligible overhead compared to the underlying DWSIM .NET solver.
