@@ -1,9 +1,6 @@
-import importlib.util
-import os
-import sys
 from unittest.mock import MagicMock
-
-import pytest
+import sys
+import os
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 
@@ -57,16 +54,3 @@ except (ModuleNotFoundError, RuntimeError):
         return interf, ObjectType
 
     dwsim_model.core.get_automation = mock_get_automation
-
-
-def pytest_collection_modifyitems(config, items):
-    dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
-    automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
-
-    # Check if we are in CI or DWSIM is not found
-    if not os.path.exists(automation_dll):
-        skip_dwsim = pytest.mark.skip(
-            reason=f"DWSIM Automation DLL not found at {automation_dll}"
-        )
-        for item in items:
-            item.add_marker(skip_dwsim)
