@@ -27,33 +27,33 @@ def test_create_operations():
     builder = FlowsheetBuilder()
 
     # Material Streams
-    ms = builder.add_object("MaterialStream", "FeedStream")
+    builder.add_object("MaterialStream", "FeedStream")
     assert builder.materials["FeedStream"] is not None
 
     # 1. Downdraft Gasifier -> RCT_Conversion or similar
-    gd = builder.add_object("RCT_Conversion", "Downdraft_Gasifier")
+    builder.add_object("RCT_Conversion", "Downdraft_Gasifier")
     assert builder.operations["Downdraft_Gasifier"] is not None
 
     # 2. PEM -> Equilibrium Reactor
-    pem = builder.add_object("RCT_Equilibrium", "PEM")
+    builder.add_object("RCT_Equilibrium", "PEM")
     assert builder.operations["PEM"] is not None
 
     # 3. TRC -> PFR Reactor
-    trc = builder.add_object("RCT_PFR", "TRC")
+    builder.add_object("RCT_PFR", "TRC")
     assert builder.operations["TRC"] is not None
 
     # 4. Quench vessel -> Vessel or Cooler
-    quench = builder.add_object("Vessel", "Quench_Vessel")
+    builder.add_object("Vessel", "Quench_Vessel")
     assert builder.operations["Quench_Vessel"] is not None
 
     # 5. Baghouse -> SolidSeparator
-    baghouse = builder.add_object("SolidSeparator", "Baghouse")
+    builder.add_object("SolidSeparator", "Baghouse")
     assert builder.operations["Baghouse"] is not None
 
     # 6. Scrubber -> ComponentSeparator
-    scrubber = builder.add_object("ComponentSeparator", "Scrubber")
+    builder.add_object("ComponentSeparator", "Scrubber")
     assert builder.operations["Scrubber"] is not None
 
     # 7. Blower / Compressor -> Compressor
-    blower = builder.add_object("Compressor", "Blower")
+    builder.add_object("Compressor", "Blower")
     assert builder.operations["Blower"] is not None
