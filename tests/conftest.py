@@ -1,23 +1,25 @@
 import sys
 import os
-import pytest
 from unittest.mock import MagicMock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src')))
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+)
 
 try:
     import clr
+
     clr_available = True
 except ImportError:
     clr_available = False
 
 if not clr_available:
-    sys.modules['clr'] = MagicMock()
+    sys.modules["clr"] = MagicMock()
 
     # Mock get_automation
     def mock_get_automation(dwsim_path=None):
         mock_interf = MagicMock()
-        mock_interf.AvailablePropertyPackages = {'Peng-Robinson (PR)': MagicMock()}
+        mock_interf.AvailablePropertyPackages = {"Peng-Robinson (PR)": MagicMock()}
 
         mock_obj_type = MagicMock()
         mock_obj_type.MaterialStream = MagicMock()
@@ -26,6 +28,7 @@ if not clr_available:
 
     # Needs to patch early before test collection starts instantiating FlowsheetBuilder
     import dwsim_model.core as core
+
     core.get_automation = mock_get_automation
 
     # Patch FlowsheetBuilder to handle compound addition/counting in mocks
@@ -36,6 +39,7 @@ if not clr_available:
         original_init(self, dwsim_path)
 
         self._mock_compounds = []
+
         def mock_add_compound(name):
             self._mock_compounds.append(MagicMock(Name=name))
 
