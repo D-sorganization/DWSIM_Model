@@ -8,7 +8,7 @@ import dwsim_model.core
 
 # Only mock if clr cannot be imported or runtime fails (e.g. non-Windows or mono not installed)
 try:
-    import clr
+    import clr  # noqa: F401
 except (ModuleNotFoundError, RuntimeError):
     # Mock get_automation directly to return MagicMocks
     def mock_get_automation(dwsim_path=""):
