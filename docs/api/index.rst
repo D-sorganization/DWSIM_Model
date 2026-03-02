@@ -1,9 +1,9 @@
-.. DWSIM_Model documentation master file, created by
-   sphinx-quickstart on Sun Mar  1 02:00:08 2026.
+.. DWSIM Model documentation master file, created by
+   sphinx-quickstart on Mon Mar  2 00:48:12 2026.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-DWSIM_Model documentation
+DWSIM Model documentation
 =========================
 
 Add your content using ``reStructuredText`` syntax. See the
