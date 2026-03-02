@@ -20,7 +20,7 @@ def test_builder_add_compound():
 
 def test_builder_property_package():
     builder = FlowsheetBuilder()
-    builder.add_property_package("Peng-Robinson (PR)")
+    _prop_pack = builder.add_property_package("Peng-Robinson (PR)")
     packages = list(builder.sim.PropertyPackages.Values)
     assert len(packages) > 0
 
