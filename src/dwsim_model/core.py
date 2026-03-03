@@ -84,13 +84,15 @@ class FlowsheetBuilder:
             logger.error(f"Failed to load property package {package_name}: {e}")
             raise ValueError(f"Failed to load property package {package_name}: {e}")
 
-    def add_object(self, obj_type_name: str, name: str) -> object:
+    def add_object(
+        self, obj_type_name: str, name: str, x: int = 0, y: int = 0
+    ) -> object:
         """Helper to add an object by enum name."""
         if not name or not obj_type_name:
             raise ValueError("Object type and name cannot be empty")
         try:
             ot = getattr(self.ObjectType, obj_type_name)
-            obj = self.sim.AddObject(ot, 0, 0, name)
+            obj = self.sim.AddObject(ot, x, y, name)
             if obj_type_name == "MaterialStream":
                 self.materials[name] = obj
             elif obj_type_name == "EnergyStream":
@@ -137,3 +139,14 @@ class FlowsheetBuilder:
             # This handles DWSIM solver exceptions nicely
             logger.error(f"DWSIM solver returned an error: {e}")
             raise RuntimeError(f"DWSIM solver returned an error: {e}")
+
+    def save(self, filepath: str) -> None:
+        """Save the flowsheet to a .dwxml or .dwsjson file for GUI visualization."""
+        try:
+            # We use SaveFlowsheet. Ensure absolute path or use os.path.abspath
+            abs_path = os.path.abspath(filepath)
+            self.interf.SaveFlowsheet(self.sim, abs_path, True)
+            logger.info(f"Saved flowsheet successfully to: {abs_path}")
+        except Exception as e:
+            logger.error(f"Failed to save flowsheet to {filepath}: {e}")
+            raise RuntimeError(f"Failed to save flowsheet: {e}")
