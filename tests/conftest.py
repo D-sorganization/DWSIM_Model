@@ -1,56 +1,75 @@
-from unittest.mock import MagicMock
-import sys
+import importlib.util
 import os
+import sys
+from unittest.mock import MagicMock
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
+import pytest
 
-import dwsim_model.core
+sys.path.insert(
+    0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
+)
 
-# Only mock if clr cannot be imported or runtime fails (e.g. non-Windows or mono not installed)
-try:
-    import clr  # noqa: F401
-except (ModuleNotFoundError, RuntimeError):
-    # Mock get_automation directly to return MagicMocks
-    def mock_get_automation(dwsim_path=""):
-        interf = MagicMock()
-        sim = MagicMock()
-        interf.CreateFlowsheet.return_value = sim
+clr_available = importlib.util.find_spec("clr") is not None
 
-        interf.AvailablePropertyPackages = {"Peng-Robinson (PR)": MagicMock()}
+if not clr_available:
+    sys.modules["clr"] = MagicMock()
 
-        sim.SelectedCompounds.Values = []
 
-        def add_compound(name):
-            mock_c = MagicMock()
-            mock_c.Name = name
-            sim.SelectedCompounds.Values.append(mock_c)
-            return mock_c
+    # Mock get_automation
+    def mock_get_automation(dwsim_path=None):
+        mock_interf = MagicMock()
+        mock_interf.AvailablePropertyPackages = {"Peng-Robinson (PR)": MagicMock()}
 
-        sim.AddCompound.side_effect = add_compound
+        mock_obj_type = MagicMock()
+        mock_obj_type.MaterialStream = MagicMock()
 
-        sim.PropertyPackages = MagicMock()
-        sim.PropertyPackages.__len__.return_value = 1
-        sim.PropertyPackages.Values = []
+        return mock_interf, mock_obj_type
 
-        def add_property_package(pack):
-            sim.PropertyPackages.Values.append(pack)
-            return pack
+    # Needs to patch early before test collection starts instantiating FlowsheetBuilder
+    import dwsim_model.core as core
 
-        sim.AddPropertyPackage.side_effect = add_property_package
+    core.get_automation = mock_get_automation
 
-        # ObjectType mock
-        class ObjectType:
-            MaterialStream = "MaterialStream"
-            EnergyStream = "EnergyStream"
-            RCT_Conversion = "RCT_Conversion"
-            RCT_Equilibrium = "RCT_Equilibrium"
-            RCT_PFR = "RCT_PFR"
-            Vessel = "Vessel"
-            Mixer = "Mixer"
-            SolidSeparator = "SolidSeparator"
-            ComponentSeparator = "ComponentSeparator"
-            Compressor = "Compressor"
+    # Patch FlowsheetBuilder to handle compound addition/counting in mocks
+    original_init = core.FlowsheetBuilder.__init__
+    original_add_pp = core.FlowsheetBuilder.add_property_package
 
-        return interf, ObjectType
+    def patched_init(self, dwsim_path=None):
+        original_init(self, dwsim_path)
 
-    dwsim_model.core.get_automation = mock_get_automation
+        self._mock_compounds = []
+
+        def mock_add_compound(name):
+            self._mock_compounds.append(MagicMock(Name=name))
+
+        self.sim.SelectedCompounds.Values = self._mock_compounds
+        self.add_compound = mock_add_compound
+
+        self._mock_packages = []
+        mock_pp = MagicMock()
+        type(mock_pp).Values = property(lambda self_mock: self._mock_packages)
+        mock_pp.__iter__ = lambda x: iter(self._mock_packages)
+        mock_pp.__len__ = lambda x: len(self._mock_packages)
+
+        self.sim.PropertyPackages = mock_pp
+
+    def patched_add_pp(self, package_name="Peng-Robinson (PR)"):
+        pkg = original_add_pp(self, package_name)
+        self._mock_packages.append(pkg)
+        return pkg
+
+    core.FlowsheetBuilder.__init__ = patched_init
+    core.FlowsheetBuilder.add_property_package = patched_add_pp
+
+
+def pytest_collection_modifyitems(config, items):
+    dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
+    automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
+
+    # Check if we are in CI or DWSIM is not found
+    if not os.path.exists(automation_dll):
+        skip_dwsim = pytest.mark.skip(
+            reason=f"DWSIM Automation DLL not found at {automation_dll}"
+        )
+        for item in items:
+            item.add_marker(skip_dwsim)
