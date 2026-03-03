@@ -1,6 +1,8 @@
-import sys
 import os
+import sys
 from unittest.mock import MagicMock
+
+import pytest
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
@@ -61,3 +63,17 @@ if not clr_available:
 
     core.FlowsheetBuilder.__init__ = patched_init
     core.FlowsheetBuilder.add_property_package = patched_add_pp
+
+
+def pytest_collection_modifyitems(config, items):
+    dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
+    automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
+
+    # Check if we are in CI or DWSIM is not found
+    if not os.path.exists(automation_dll):
+        skip_dwsim = pytest.mark.skip(
+            reason=f"DWSIM Automation DLL not found at {automation_dll}"
+        )
+        for item in items:
+            item.add_marker(skip_dwsim)
+
