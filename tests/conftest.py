@@ -14,7 +14,6 @@ clr_available = importlib.util.find_spec("clr") is not None
 if not clr_available:
     sys.modules["clr"] = MagicMock()
 
-
     # Mock get_automation
     def mock_get_automation(dwsim_path=None):
         mock_interf = MagicMock()
