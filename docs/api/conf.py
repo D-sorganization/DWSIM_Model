@@ -6,12 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = "DWSIM_Model"
-copyright = "2026, D-sorganization"
-author = "D-sorganization"
+project = "DWSIM Model"
+copyright = "2026, Author"
+author = "Author"
 
-version = "0.1"
-release = "0.1"
+version = "1.0"
+release = "1.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

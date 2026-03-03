@@ -1,6 +1,5 @@
-# Assessment F: Security
+# Assessment F_Security
 
-**Grade:** 9/10
+**Grade: 7/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+No direct security vulnerabilities found. The application does not handle web requests, user inputs via web APIs, or database connections. It purely interfaces with a local .NET application.

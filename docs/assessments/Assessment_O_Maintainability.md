@@ -1,6 +1,5 @@
-# Assessment O: Maintainability
+# Assessment O_Maintainability
 
-**Grade:** 8/10
+**Grade: 7/10**
 
-## Evaluation
-Based on static analysis and repository structure.
+The code is readable, modular, and concise. The use of a builder pattern separates configuration logic from execution logic, making maintenance straightforward.
