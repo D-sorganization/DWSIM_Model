@@ -1,5 +1,6 @@
 # Assessment G_Dependencies
 
-**Grade: 5/10**
+## Grade: 6/10
 
-The reliance on the `clr` package from `pythonnet` without cross-platform fallback handling causes CI pipelines and non-Windows local setups to fail immediately. High dependency coupling.
+### Assessment Notes
+- AUTO-FIXED: Missing `requirements.txt` was added to declare `pythonnet` and `pytest`. System-level dependency (`mono` or .NET on Linux) is a major constraint not explicitly handled in automated setup scripts.

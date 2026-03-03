@@ -1,5 +1,6 @@
 # Assessment B_Documentation
 
-**Grade: 6/10**
+## Grade: 7/10
 
-Basic docstrings exist for classes and functions. `README.md` is present but is mostly boilerplate from a template repository. Needs specific documentation for `dwsim_model` usage and architecture.
+### Assessment Notes
+- The repository has a comprehensive template `README.md` and `AGENTS.md`. Docstrings are present for classes and methods, but they could be more detailed regarding the exact math/logic of DWSIM usage.

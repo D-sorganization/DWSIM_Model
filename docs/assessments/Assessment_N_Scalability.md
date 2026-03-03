@@ -1,5 +1,6 @@
 # Assessment N_Scalability
 
-**Grade: 6/10**
+## Grade: 6/10
 
-The wrapper supports building arbitrarily complex flowsheets by adding streams and reactors iteratively. The main bottleneck is the DWSIM solver itself.
+### Assessment Notes
+- The wrapper is mostly synchronous and relies heavily on a single DWSIM flowsheet instance. Might face issues if parallel simulations are required.

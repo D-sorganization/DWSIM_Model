@@ -1,5 +1,6 @@
 # Assessment C_Test_Coverage
 
-**Grade: 4/10**
+## Grade: 7/10
 
-Test coverage exists for building gasification models. However, tests were previously failing due to missing `clr` system dependency on non-Windows CI environments, showing incomplete cross-platform testing considerations.
+### Assessment Notes
+- There are tests in `tests/test_builder.py`, `tests/test_gasification_build.py`, and `tests/test_gasification_module.py`. They cover initialization and operations, but all fail without a valid .NET runtime which limits practical coverage.

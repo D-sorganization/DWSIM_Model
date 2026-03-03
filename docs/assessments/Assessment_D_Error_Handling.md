@@ -1,5 +1,6 @@
 # Assessment D_Error_Handling
 
-**Grade: 6/10**
+## Grade: 8/10
 
-Good use of `try/except` blocks in `core.py` when attempting to load property packages or create flowsheets. Errors raised are clear `ValueError` or `RuntimeError` instances with context.
+### Assessment Notes
+- Good error handling using `try/except` blocks in `core.py` functions like `add_compound` and `connect`. Descriptive error messages are raised using `RuntimeError` and `ValueError`.
