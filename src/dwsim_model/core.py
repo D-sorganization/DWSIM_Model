@@ -1,5 +1,10 @@
 import os
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
+
+# AUTO-FIXED: Added basic logging
 
 _interf = None
 _ObjectType = None
@@ -26,7 +31,9 @@ def get_automation(dwsim_path: str = r"C:\Users\diete\AppData\Local\DWSIM"):
 
         _interf = Automation3()
         _ObjectType = ObjectType
+        logger.info("Successfully loaded DWSIM automation.")
     except Exception as e:
+        logger.error(f"Failed to load DWSIM automation from {dwsim_path}: {e}")
         raise RuntimeError(f"Could not load DWSIM automation from {dwsim_path}: {e}")
 
     return _interf, _ObjectType
@@ -51,7 +58,9 @@ class FlowsheetBuilder:
             raise ValueError("Compound name cannot be empty")
         try:
             self.sim.AddCompound(name)
+            logger.debug(f"Added compound '{name}' to the simulation.")
         except Exception as e:
+            logger.error(f"Failed to add compound '{name}': {e}")
             raise ValueError(f"Failed to add compound '{name}': {e}")
 
     def add_property_package(self, package_name: str = "Peng-Robinson (PR)") -> object:
@@ -66,8 +75,10 @@ class FlowsheetBuilder:
                 )
             prop_pack = pp_dict[package_name]
             self.sim.AddPropertyPackage(prop_pack)
+            logger.debug(f"Added property package '{package_name}'.")
             return prop_pack
         except Exception as e:
+            logger.error(f"Failed to load property package {package_name}: {e}")
             raise ValueError(f"Failed to load property package {package_name}: {e}")
 
     def add_object(self, obj_type_name: str, name: str) -> object:
@@ -83,8 +94,12 @@ class FlowsheetBuilder:
                 self.energy_streams[name] = obj
             else:
                 self.operations[name] = obj
+            logger.debug(f"Added object '{name}' of type '{obj_type_name}'.")
             return obj
         except Exception as e:
+            logger.error(
+                f"Failed to add object '{name}' of type '{obj_type_name}': {e}"
+            )
             raise ValueError(
                 f"Failed to add object '{name}' of type '{obj_type_name}': {e}"
             )
@@ -101,14 +116,21 @@ class FlowsheetBuilder:
             self.sim.ConnectObjects(
                 source_graphic, target_graphic, source_port, target_port
             )
+            logger.debug(
+                f"Connected {source_obj} to {target_obj} (ports {source_port}->{target_port})."
+            )
         except Exception as e:
+            logger.error(f"Failed to connect {source_obj} to {target_obj}: {e}")
             raise RuntimeError(f"Failed to connect {source_obj} to {target_obj}: {e}")
 
     def calculate(self) -> None:
         """Run the simulation flowsheet."""
         # CalculateFlowsheet2 handles IFlowsheet cleanly in older Pythonnet bindings
         try:
+            logger.info("Starting flowsheet calculation.")
             self.interf.CalculateFlowsheet2(self.sim)
+            logger.info("Flowsheet calculation finished successfully.")
         except Exception as e:
             # This handles DWSIM solver exceptions nicely
+            logger.error(f"DWSIM solver returned an error: {e}")
             raise RuntimeError(f"DWSIM solver returned an error: {e}")
