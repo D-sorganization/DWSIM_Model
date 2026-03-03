@@ -1,6 +1,7 @@
 import logging
 from enum import Enum
 from dwsim_model.core import FlowsheetBuilder
+from dwsim_model.config_loader import ConfigLoader
 
 logger = logging.getLogger(__name__)
 
@@ -324,6 +325,15 @@ class GasificationFlowsheet:
 
         # Configure detailed models after layout
         self._configure_reactors()
+
+        # Configuration Load
+        # Allows researchers to specify thermodynamic data outside of pure python
+        try:
+            loader = ConfigLoader()
+            loader.load()
+            loader.apply_to_flowsheet(self.builder, b.materials, b.energies)
+        except Exception as e:
+            logger.error(f"Failed to load user configuration: {e}")
 
         self._is_built = True
 
