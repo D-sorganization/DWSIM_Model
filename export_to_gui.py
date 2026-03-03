@@ -7,15 +7,15 @@ if __name__ == "__main__":
     print("Building flowsheet...")
     # Instantiate the flowsheet
     model = GasificationFlowsheet(mode=ReactorMode.MIXED)
-    
+
     # Build
     model.setup_thermo()
     model.build_flowsheet()
-    
+
     # Calculate initial values
     print("Calculating initial state...")
     model.run()
-    
+
     # Save to GUI format
     output_filename = "Gasification_Model_GUI.dwxml"
     print(f"Exporting to {output_filename}...")
