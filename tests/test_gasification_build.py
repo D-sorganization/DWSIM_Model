@@ -57,4 +57,3 @@ def test_create_operations():
     # 7. Blower / Compressor -> Compressor
     builder.add_object("Compressor", "Blower")
     assert builder.operations["Blower"] is not None
-

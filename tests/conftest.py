@@ -1,3 +1,4 @@
+import importlib.util
 import os
 import sys
 from unittest.mock import MagicMock
@@ -8,12 +9,7 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
 
-try:
-    import clr
-
-    clr_available = True
-except ImportError:
-    clr_available = False
+clr_available = importlib.util.find_spec("clr") is not None
 
 if not clr_available:
     sys.modules["clr"] = MagicMock()
@@ -76,4 +72,3 @@ def pytest_collection_modifyitems(config, items):
         )
         for item in items:
             item.add_marker(skip_dwsim)
-

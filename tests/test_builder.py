@@ -23,4 +23,3 @@ def test_builder_property_package():
     builder.add_property_package("Peng-Robinson (PR)")
     packages = list(builder.sim.PropertyPackages.Values)
     assert len(packages) > 0
-
