@@ -93,6 +93,12 @@ class FlowsheetBuilder:
         try:
             ot = getattr(self.ObjectType, obj_type_name)
             obj = self.sim.AddObject(ot, x, y, name)
+            if hasattr(obj, "GraphicObject") and obj.GraphicObject is not None:
+                try:
+                    obj.GraphicObject.ShowObjectData = True
+                except Exception:
+                    pass
+
             if obj_type_name == "MaterialStream":
                 self.materials[name] = obj
             elif obj_type_name == "EnergyStream":
