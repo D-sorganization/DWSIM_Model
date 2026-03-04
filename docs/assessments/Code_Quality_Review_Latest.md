@@ -12,6 +12,6 @@ A review of the recent Git history has identified several areas for improvement,
 
 ## Recommendations
 - **Complete the Reactor Configuration**: Address the `To-Do` comments in `_configure_reactors` within `src/dwsim_model/gasification.py`. Implement the programmatic configuration for the `Downdraft Gasifier`, `PEM`, and `TRC` reactors.
-- **Track via GitHub Issue**: Create a GitHub issue to track the completion of the `GasificationFlowsheet` configuration logic.
+- **Track via GitHub Issue**: Created a GitHub issue to track the completion of the `GasificationFlowsheet` configuration logic: [docs/assessments/issues/open/Critical_Incomplete_Reactor_Configuration_Logic_in_GasificationFlowsheet.md](docs/assessments/issues/open/Critical_Incomplete_Reactor_Configuration_Logic_in_GasificationFlowsheet.md)
 
-Detailed report: [docs/assessments/changelog_reviews/git_history_review.md](docs/assessments/changelog_reviews/git_history_review.md)
+Detailed report: [docs/assessments/changelog_reviews/2026-03-03-Review.md](docs/assessments/changelog_reviews/2026-03-03-Review.md)
