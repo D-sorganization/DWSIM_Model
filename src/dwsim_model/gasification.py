@@ -70,7 +70,9 @@ class GasificationFlowsheet:
 
     def setup_thermo(self) -> None:
         """Sets up thermodynamics and compounds. DbC: Builder must exist."""
-        assert self.builder is not None, "Builder instance required"
+        # AUTO-FIXED: Replaced assert with if-raise to prevent byte-code optimization removal
+        if self.builder is None:
+            raise RuntimeError("Builder instance required")
 
         # Adding typical syngas compounds
         compounds = [
@@ -371,5 +373,7 @@ class GasificationFlowsheet:
 
     def run(self):
         """Execute the configured flowsheet."""
-        assert self._is_built, "Flowsheet must be built before running"
+        # AUTO-FIXED: Replaced assert with if-raise to prevent byte-code optimization removal
+        if not self._is_built:
+            raise RuntimeError("Flowsheet must be built before running")
         self.builder.calculate()

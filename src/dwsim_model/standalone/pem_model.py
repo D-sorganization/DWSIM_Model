@@ -95,7 +95,9 @@ class PEMStandaloneFlowsheet:
         self._is_built = True
 
     def calculate(self):
-        assert self._is_built, "Flowsheet must be built before calculating."
+        # AUTO-FIXED: Replaced assert with if-raise to prevent byte-code optimization removal
+        if not self._is_built:
+            raise RuntimeError("Flowsheet must be built before calculating.")
         self.builder.calculate()
 
 
