@@ -128,7 +128,7 @@ class ResultsExtractor:
 
     # ─────────────────────────────────────────────────────────────────────────
 
-    def extract(self, builder) -> FlowsheetResults:
+    def extract(self, builder, converged: bool | None = None) -> FlowsheetResults:
         """
         Extract all results from a solved flowsheet.
 
@@ -136,6 +136,10 @@ class ResultsExtractor:
         ----------
         builder:
             A FlowsheetBuilder instance that has been built and run.
+        converged:
+            Optional explicit convergence flag from the DWSIM solver.
+            If provided, this takes precedence over the extraction-error heuristic.
+            If None, falls back to: len(errors) == 0 (may be inaccurate — see Bug #5).
 
         Returns
         -------
@@ -168,7 +172,12 @@ class ResultsExtractor:
             except Exception as exc:
                 logger.debug(f"Could not extract energy stream '{name}': {exc}")
 
-        results.converged = len(results.errors) == 0
+        # fix: extraction errors != solver non-convergence (Bug #5).
+        # Use the explicit converged flag if provided; fall back to heuristic.
+        if converged is not None:
+            results.converged = converged
+        else:
+            results.converged = len(results.errors) == 0
 
         logger.info(
             f"Extraction complete: {len(results.streams)} streams, "

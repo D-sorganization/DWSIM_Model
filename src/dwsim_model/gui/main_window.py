@@ -371,10 +371,10 @@ class MainWindow(tk.Tk):
             self._results_tab.log("Building flowsheet…")
             flowsheet = GasificationFlowsheet()
             flowsheet._injected_config = cfg
-            flowsheet.build()
+            flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
 
             self._results_tab.log("Solving…")
-            flowsheet.solve()
+            flowsheet.run()  # fix: was solve() - method name mismatch
             self._results_tab.log("Solve complete.", "INFO")
 
             extractor = ResultsExtractor()
@@ -444,8 +444,10 @@ class MainWindow(tk.Tk):
             cfg = self._collect_config_from_tabs()
             flowsheet = GasificationFlowsheet()
             flowsheet._injected_config = cfg
-            flowsheet.build()
-            flowsheet.builder.sim.SaveToFile(path)
+            flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
+            flowsheet.builder.save(
+                str(path)
+            )  # fix: was sim.SaveToFile() - wrong DWSIM API
             messagebox.showinfo(
                 "Export Complete",
                 f"Flowsheet exported to:\n{path}\n\n"
