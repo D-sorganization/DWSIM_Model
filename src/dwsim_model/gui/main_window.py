@@ -30,6 +30,7 @@ from __future__ import annotations
 import logging
 import threading
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
@@ -103,8 +104,8 @@ class MainWindow(tk.Tk):
         # Scenario menu
         sc_menu = tk.Menu(menubar, tearoff=0)
 
-        def make_command(s: str) -> None:
-            return lambda: self._on_load_scenario(s)  # type: ignore[return-value]
+        def make_command(s: str) -> Callable[[], None]:
+            return lambda: self._on_load_scenario(s)
 
         for scenario in ("baseline", "high_steam", "air_blown"):
             sc_menu.add_command(
