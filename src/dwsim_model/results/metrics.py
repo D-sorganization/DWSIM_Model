@@ -331,7 +331,7 @@ class MetricsCalculator:
         if abs(m.mass_balance_closure - 1.0) > 0.01:
             m.warnings.append(
                 f"Mass balance not closed: {m.mass_balance_closure:.4f} "
-                f"(deviation = {abs(m.mass_balance_closure-1)*100:.2f}%). "
+                f"(deviation = {abs(m.mass_balance_closure - 1) * 100:.2f}%). "
                 "Check that all inlet/outlet streams were solved."
             )
         if m.h2_co_ratio == 0 and syngas.mass_flow_kg_s > 0:

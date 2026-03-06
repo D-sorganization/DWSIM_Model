@@ -77,12 +77,12 @@ def cmd_run(args: argparse.Namespace) -> int:
 
     # Build flowsheet
     flowsheet = GasificationFlowsheet(config_path=config_path)
-    flowsheet.build()
+    flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
 
     # Solve
     logger.info("Solving flowsheet ...")
     try:
-        flowsheet.solve()
+        flowsheet.run()  # fix: was solve() - method name mismatch
         logger.info("Flowsheet solved successfully.")
     except Exception as exc:
         logger.error(f"Solve failed: {exc}")
@@ -125,7 +125,9 @@ def cmd_run(args: argparse.Namespace) -> int:
     if args.save_dwxml:
         try:
             dwxml_path = out_dir / f"{scenario}.dwxml"
-            flowsheet.builder.sim.SaveToFile(str(dwxml_path))
+            flowsheet.builder.save(
+                str(dwxml_path)
+            )  # fix: was sim.SaveToFile() - wrong DWSIM API
             logger.info(f"DWSIM file saved: {dwxml_path}")
             print(f"✓  DWXML file:   {dwxml_path}")
         except Exception as exc:
@@ -279,12 +281,14 @@ def cmd_export(args: argparse.Namespace) -> int:
 
     logger.info("Building flowsheet for export ...")
     flowsheet = GasificationFlowsheet(config_path=config_path)
-    flowsheet.build()
+    flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
 
     out_path = Path(args.output or "Gasification_Model_GUI.dwxml")
 
     try:
-        flowsheet.builder.sim.SaveToFile(str(out_path))
+        flowsheet.builder.save(
+            str(out_path)
+        )  # fix: was sim.SaveToFile() - wrong DWSIM API
         print(f"✓  Flowsheet exported to {out_path}")
         print("   Open with DWSIM → File → Open Simulation")
         return 0

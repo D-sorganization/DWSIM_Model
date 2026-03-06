@@ -92,7 +92,7 @@ def _set_nested(d: dict, dot_path: str, value: Any) -> dict:
     for key in keys[:-1]:
         if key not in node:
             raise KeyError(
-                f"Path '{dot_path}' not found in config — " f"missing key '{key}'."
+                f"Path '{dot_path}' not found in config — missing key '{key}'."
             )
         node = node[key]
     node[keys[-1]] = value
@@ -134,8 +134,8 @@ def _default_model_runner(config: dict) -> dict:
     flowsheet = GasificationFlowsheet()
     # Inject the patched config dict directly so we bypass file I/O
     flowsheet._injected_config = config
-    flowsheet.build()
-    flowsheet.solve()
+    flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
+    flowsheet.run()  # fix: was solve() - method name mismatch
 
     extractor = ResultsExtractor()
     results = extractor.extract(flowsheet.builder)
@@ -243,7 +243,7 @@ class ParameterSweep:
                 kpi_dict = self._runner(config)
                 elapsed = time.perf_counter() - t0
                 logger.debug(
-                    f"  Run {i+1}/{len(values)}: {label}={val} → "
+                    f"  Run {i + 1}/{len(values)}: {label}={val} → "
                     f"CGE={kpi_dict.get('cold_gas_efficiency', '?'):.3f}  "
                     f"({elapsed:.1f}s)"
                 )
@@ -253,7 +253,7 @@ class ParameterSweep:
                 row["run_time_s"] = round(elapsed, 2)
                 row["converged"] = kpi_dict.get("converged", None)  # type: ignore[assignment]
             except Exception as exc:
-                logger.error(f"  Run {i+1}: {label}={val} FAILED: {exc}")
+                logger.error(f"  Run {i + 1}: {label}={val} FAILED: {exc}")
                 row["error"] = str(exc)  # type: ignore[assignment]
 
             rows.append(row)

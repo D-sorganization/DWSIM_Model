@@ -197,7 +197,8 @@ def _build_html(results, metrics, scenario_name, model_version, targets) -> str:
     )
 
     # ── Syngas composition data for Chart.js ────────────────────────────────
-    syngas_stream = results.streams.get("Syngas_Out") or results.streams.get(
+    # fix: was "Syngas_Out" - canonical stream name is "Final_Syngas" (gasification.py line 238)
+    syngas_stream = results.streams.get("Final_Syngas") or results.streams.get(
         next(iter(results.streams), "")
     )
     chart_labels = []
@@ -363,7 +364,7 @@ def _build_html(results, metrics, scenario_name, model_version, targets) -> str:
 
   <!-- ── Syngas Composition ── -->
   <div class="section">
-    <h2>Syngas Composition (Syngas_Out)</h2>
+    <h2>Syngas Composition (Final_Syngas)</h2>
     <div class="two-col">
       <div class="chart-container">
         <canvas id="sysgasChart"></canvas>
@@ -579,10 +580,10 @@ def _build_stream_table(results) -> str:
         rows.append(
             f"<tr>"
             f"<td><strong>{name}</strong></td>"
-            f'<td class="num">{_fmt(getattr(s,"temperature_C",None), ".1f")}</td>'
-            f'<td class="num">{_fmt(getattr(s,"pressure_kPa",None), ".1f")}</td>'
-            f'<td class="num">{_fmt(getattr(s,"mass_flow_kg_s",None), ".3f")}</td>'
-            f'<td class="num">{_fmt(getattr(s,"volumetric_flow_Nm3_h",None), ".1f")}</td>'
+            f'<td class="num">{_fmt(getattr(s, "temperature_C", None), ".1f")}</td>'
+            f'<td class="num">{_fmt(getattr(s, "pressure_kPa", None), ".1f")}</td>'
+            f'<td class="num">{_fmt(getattr(s, "mass_flow_kg_s", None), ".3f")}</td>'
+            f'<td class="num">{_fmt(getattr(s, "volumetric_flow_Nm3_h", None), ".1f")}</td>'
             f"{comp_cells}"
             f"</tr>"
         )
@@ -669,10 +670,7 @@ def _build_syngas_table(syngas_stream) -> str:
     mf = syngas_stream.mole_fractions
     for comp, val in sorted(mf.items(), key=lambda x: -x[1]):
         rows.append(
-            f"<tr>"
-            f"<td>{comp}</td>"
-            f'<td class="num">{_fmt(val * 100, ".2f")}%</td>'
-            f"</tr>"
+            f'<tr><td>{comp}</td><td class="num">{_fmt(val * 100, ".2f")}%</td></tr>'
         )
 
     return header + "\n".join(rows) + "</tbody></table>"
