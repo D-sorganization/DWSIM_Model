@@ -103,9 +103,13 @@ class MainWindow(tk.Tk):
         # Scenario menu
         sc_menu = tk.Menu(menubar, tearoff=0)
         for scenario in ("baseline", "high_steam", "air_blown"):
+
+            def _make_scenario_cmd(s: str):  # type: ignore[no-untyped-def]
+                return lambda: self._on_load_scenario(s)
+
             sc_menu.add_command(
                 label=scenario.replace("_", " ").title(),
-                command=lambda s=scenario: self._on_load_scenario(s),
+                command=_make_scenario_cmd(scenario),
             )
         menubar.add_cascade(label="Scenarios", menu=sc_menu)
 

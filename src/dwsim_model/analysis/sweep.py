@@ -251,10 +251,10 @@ class ParameterSweep:
                     kpi_dict = {k: kpi_dict.get(k) for k in kpis}
                 row.update(kpi_dict)
                 row["run_time_s"] = round(elapsed, 2)
-                row["converged"] = kpi_dict.get("converged", None)
+                row["converged"] = kpi_dict.get("converged", None)  # type: ignore[assignment]
             except Exception as exc:
                 logger.error(f"  Run {i+1}: {label}={val} FAILED: {exc}")
-                row["error"] = str(exc)
+                row["error"] = str(exc)  # type: ignore[assignment]
 
             rows.append(row)
 
@@ -335,7 +335,7 @@ class ParameterSweep:
                     row["run_time_s"] = round(elapsed, 2)
                 except Exception as exc:
                     logger.error(f"  Run {run_idx}: ({val_a}, {val_b}) FAILED: {exc}")
-                    row["error"] = str(exc)
+                    row["error"] = str(exc)  # type: ignore[assignment]
 
                 rows.append(row)
 
