@@ -100,13 +100,10 @@ class GasificationFlowsheet:
     # ──────────────────────────────────────────────────────────────────────────
 
     def setup_thermo(self) -> None:
-        """Sets up thermodynamics and compounds.
-
-        Uses self.compound_set which defaults to COMPOUNDS_STANDARD from
-        constants.py.  To add species, edit constants.py or pass a custom
-        compound_set to the constructor.
-        """
-        assert self.builder is not None, "Builder instance required"
+        """Sets up thermodynamics and compounds. DbC: Builder must exist."""
+        # AUTO-FIXED: Replaced assert with if-raise to prevent byte-code optimization removal
+        if self.builder is None:
+            raise RuntimeError("Builder instance required")
 
         for compound in self.compound_set:
             self.builder.add_compound(compound)
@@ -414,5 +411,7 @@ class GasificationFlowsheet:
 
     def run(self) -> None:
         """Execute the configured flowsheet."""
-        assert self._is_built, "Flowsheet must be built before running"
+        # AUTO-FIXED: Replaced assert with if-raise to prevent byte-code optimization removal
+        if not self._is_built:
+            raise RuntimeError("Flowsheet must be built before running")
         self.builder.calculate()
