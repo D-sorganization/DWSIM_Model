@@ -102,6 +102,7 @@ class MainWindow(tk.Tk):
 
         # Scenario menu
         sc_menu = tk.Menu(menubar, tearoff=0)
+
         def make_command(s: str):
             return lambda: self._on_load_scenario(s)
 
