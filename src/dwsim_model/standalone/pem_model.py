@@ -1,5 +1,6 @@
 import logging
 from dwsim_model.core import FlowsheetBuilder, get_automation
+from dwsim_model.constants import COMPOUNDS_STANDARD, DEFAULT_PROPERTY_PACKAGE
 
 logger = logging.getLogger(__name__)
 
@@ -10,26 +11,17 @@ class PEMStandaloneFlowsheet:
     Designed for isolated testing and configuration (DbC, DRY).
     """
 
-    def __init__(self):
+    def __init__(self, compound_set: list | None = None):
         self.automation = get_automation()
         self.builder = FlowsheetBuilder()
         self._is_built = False
+        self._compounds = compound_set or COMPOUNDS_STANDARD
 
     def setup_thermo(self):
         """Configure standard PR properties and required components."""
-        compounds = [
-            "Carbon monoxide",
-            "Hydrogen",
-            "Carbon dioxide",
-            "Methane",
-            "Water",
-            "Nitrogen",
-            "Oxygen",
-            "Helium",
-        ]
-        for c in compounds:
+        for c in self._compounds:
             self.builder.add_compound(c)
-        self.builder.add_property_package("Peng-Robinson (PR)")
+        self.builder.add_property_package(DEFAULT_PROPERTY_PACKAGE)
 
     def build_flowsheet(self):
         """Constructs an isolated PEM block."""

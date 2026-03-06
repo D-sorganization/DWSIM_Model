@@ -64,11 +64,29 @@ if not clr_available:
 def pytest_collection_modifyitems(config, items):
     dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
     automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
+    dwsim_available = os.path.exists(automation_dll)
 
-    # Check if we are in CI or DWSIM is not found
-    if not os.path.exists(automation_dll):
+    # Only skip tests that require the DWSIM runtime.
+    #
+    # Tests in the DWSIM_TEST_FILES set (which call FlowsheetBuilder.build/solve
+    # against the real DWSIM COM object) are skipped when DWSIM is absent.
+    #
+    # Any test marked @pytest.mark.dwsim is also skipped without DWSIM.
+    #
+    # All other tests — pure-Python tests for schema validation,
+    # biomass decomposer, metrics, parameter sweep, etc. — run freely
+    # regardless of whether DWSIM is installed.
+    DWSIM_TEST_FILES = {"test_standalone.py", "test_gasification_module.py"}
+
+    if not dwsim_available:
         skip_dwsim = pytest.mark.skip(
-            reason=f"DWSIM Automation DLL not found at {automation_dll}"
+            reason=(
+                f"DWSIM not installed — DLL not found at {automation_dll}. "
+                "Only DWSIM-dependent tests are skipped."
+            )
         )
         for item in items:
-            item.add_marker(skip_dwsim)
+            in_dwsim_file = item.fspath.basename in DWSIM_TEST_FILES
+            has_dwsim_marker = item.get_closest_marker("dwsim") is not None
+            if in_dwsim_file or has_dwsim_marker:
+                item.add_marker(skip_dwsim)
