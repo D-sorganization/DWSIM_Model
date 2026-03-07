@@ -147,8 +147,7 @@ class BiomassDecomposer:
 
         if daf_frac <= 0:
             raise ValueError(
-                f"daf_frac = {daf_frac:.3f} ≤ 0. "
-                "moisture + ash exceeds 100% of feed."
+                f"daf_frac = {daf_frac:.3f} ≤ 0. moisture + ash exceeds 100% of feed."
             )
 
         # Scale daf ultimate analysis to as-received, mass-based
