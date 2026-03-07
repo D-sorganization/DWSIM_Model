@@ -236,7 +236,7 @@ class ParameterSweep:
                 logger.warning(f"[sweep_1d] Could not set {param_path}={val}: {exc}")
                 continue
 
-            row = {label: val}
+            row: dict[str, Any] = {label: float(val)}
             t0 = time.perf_counter()
 
             try:
@@ -317,7 +317,7 @@ class ParameterSweep:
                     )
                     continue
 
-                row = {label_a: val_a, label_b: val_b}
+                row: dict[str, Any] = {label_a: float(val_a), label_b: float(val_b)}
                 t0 = time.perf_counter()
 
                 try:
@@ -376,7 +376,7 @@ class ParameterSweep:
         all_rows = []
 
         for param_path, (min_val, max_val) in params.items():
-            values = np.linspace(min_val, max_val, n_steps)
+            values = np.linspace(min_val, max_val, n_steps).tolist()
             label = param_path.split(".")[-1]
             df = self.sweep_1d(param_path, values, kpis=kpis, label=label)
 

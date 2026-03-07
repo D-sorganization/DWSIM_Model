@@ -30,6 +30,7 @@ from __future__ import annotations
 import logging
 import threading
 import tkinter as tk
+from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
@@ -102,14 +103,14 @@ class MainWindow(tk.Tk):
 
         # Scenario menu
         sc_menu = tk.Menu(menubar, tearoff=0)
+
+        def make_command(s: str) -> Callable[[], None]:
+            return lambda: self._on_load_scenario(s)
+
         for scenario in ("baseline", "high_steam", "air_blown"):
-
-            def _make_scenario_cmd(s: str):  # type: ignore[no-untyped-def]
-                return lambda: self._on_load_scenario(s)
-
             sc_menu.add_command(
                 label=scenario.replace("_", " ").title(),
-                command=_make_scenario_cmd(scenario),
+                command=make_command(scenario),
             )
         menubar.add_cascade(label="Scenarios", menu=sc_menu)
 
@@ -160,7 +161,7 @@ class MainWindow(tk.Tk):
         scenario_combo.pack(side="right", padx=4, pady=4)
         scenario_combo.bind(
             "<<ComboboxSelected>>",
-            lambda e: self._on_load_scenario(self._scenario_var.get()),
+            lambda e: self._on_load_scenario(str(self._scenario_var.get())),
         )
 
     def _build_main_area(self) -> None:
