@@ -228,6 +228,7 @@ class TestParameterSweep2D:
 class TestSensitivityOAT:
 
     def test_oat_produces_rows_for_each_param(self):
+        pytest.importorskip("numpy")
         mock_runner = _make_mock_runner()
         sweep = ParameterSweep(model_runner=mock_runner)
         sweep.set_base_config(
