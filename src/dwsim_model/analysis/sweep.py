@@ -371,7 +371,13 @@ class ParameterSweep:
         All rows include a 'swept_param' column identifying which parameter
         was varied.
         """
-        import numpy as np
+        try:
+            import numpy as np
+        except ImportError:
+            # AUTO-FIXED: explicitly fail with clear missing dependency requirement instead of crashing silently
+            raise ImportError(
+                "numpy is required for sensitivity_oat. Install it with: pip install numpy"
+            )
 
         all_rows = []
 
