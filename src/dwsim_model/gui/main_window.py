@@ -30,7 +30,6 @@ from __future__ import annotations
 import logging
 import threading
 import tkinter as tk
-from collections.abc import Callable
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
 
@@ -104,7 +103,7 @@ class MainWindow(tk.Tk):
         # Scenario menu
         sc_menu = tk.Menu(menubar, tearoff=0)
 
-        def make_command(s: str) -> Callable[[], None]:
+        def make_command(s: str):
             return lambda: self._on_load_scenario(s)
 
         for scenario in ("baseline", "high_steam", "air_blown"):
@@ -372,10 +371,10 @@ class MainWindow(tk.Tk):
             self._results_tab.log("Building flowsheet…")
             flowsheet = GasificationFlowsheet()
             flowsheet._injected_config = cfg
-            flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
+            flowsheet.build()
 
             self._results_tab.log("Solving…")
-            flowsheet.run()  # fix: was solve() - method name mismatch
+            flowsheet.solve()
             self._results_tab.log("Solve complete.", "INFO")
 
             extractor = ResultsExtractor()
@@ -445,10 +444,8 @@ class MainWindow(tk.Tk):
             cfg = self._collect_config_from_tabs()
             flowsheet = GasificationFlowsheet()
             flowsheet._injected_config = cfg
-            flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
-            flowsheet.builder.save(
-                str(path)
-            )  # fix: was sim.SaveToFile() - wrong DWSIM API
+            flowsheet.build()
+            flowsheet.builder.sim.SaveToFile(path)
             messagebox.showinfo(
                 "Export Complete",
                 f"Flowsheet exported to:\n{path}\n\n"
