@@ -28,6 +28,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 from typing import Any, Callable, Optional
+import logging
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Colour constants (matches the HTML report palette)
@@ -403,7 +404,7 @@ class LogPanel(ttk.Frame):
                         level=record.levelname,
                     )
                 except Exception:
-                    pass
+                    self.handleError(record)  # AUTO-FIXED
 
         handler = _GUIHandler()
         handler.setFormatter(
@@ -422,8 +423,10 @@ def apply_styles(root: tk.Tk) -> None:
     style = ttk.Style(root)
     try:
         style.theme_use("clam")
-    except Exception:
-        pass  # Fall back to default
+    except Exception as exc:
+        logging.getLogger(__name__).debug(
+            f"Could not apply clam theme: {exc}"
+        )  # AUTO-FIXED  # Fall back to default
 
     style.configure("TFrame", background=COLOR_BG)
     style.configure("TLabelframe", background=COLOR_BG)
