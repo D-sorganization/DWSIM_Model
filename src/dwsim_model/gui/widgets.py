@@ -424,7 +424,9 @@ def apply_styles(root: tk.Tk) -> None:
     try:
         style.theme_use("clam")
     except Exception as exc:
-        logging.getLogger(__name__).debug(f"Could not apply clam theme: {exc}")  # AUTO-FIXED  # Fall back to default
+        logging.getLogger(__name__).debug(
+            f"Could not apply clam theme: {exc}"
+        )  # AUTO-FIXED  # Fall back to default
 
     style.configure("TFrame", background=COLOR_BG)
     style.configure("TLabelframe", background=COLOR_BG)
