@@ -84,6 +84,18 @@ MW_G_MOL: dict[str, float] = {
     "Ammonia": 17.031,
 }
 
+# Carbon mass fraction by species for surrogate and product streams.
+CARBON_MASS_FRACTION: dict[str, float] = {
+    "Carbon monoxide": 12.011 / 28.010,
+    "Carbon dioxide": 12.011 / 44.010,
+    "Methane": 12.011 / 16.043,
+    "Ethylene": 24.022 / 28.053,
+    "Ethane": 24.022 / 30.069,
+    "Acetylene": 24.022 / 26.038,
+    "Naphthalene": 120.110 / 128.174,
+    "Toluene": 84.077 / 92.140,
+}
+
 # Typical biomass LHV (MJ/kg, as-received) — used as fallback if not in config
 DEFAULT_BIOMASS_LHV_MJ_KG = 15.0
 
@@ -248,8 +260,19 @@ class MetricsCalculator:
         cold gas efficiency.  Default: 15.0 MJ/kg (typical MSW).
     """
 
-    def __init__(self, biomass_lhv_mj_kg: float = DEFAULT_BIOMASS_LHV_MJ_KG):
+    def __init__(
+        self,
+        biomass_lhv_mj_kg: float = DEFAULT_BIOMASS_LHV_MJ_KG,
+        biomass_carbon_mass_fraction: float | None = None,
+    ):
+        if biomass_carbon_mass_fraction is not None and not (
+            0.0 <= biomass_carbon_mass_fraction <= 1.0
+        ):
+            raise ValueError(
+                "biomass_carbon_mass_fraction must be between 0.0 and 1.0."
+            )
         self.biomass_lhv_mj_kg = biomass_lhv_mj_kg
+        self.biomass_carbon_mass_fraction = biomass_carbon_mass_fraction
 
     # ─────────────────────────────────────────────────────────────────────────
 
@@ -295,6 +318,9 @@ class MetricsCalculator:
 
         # ── Syngas LHV ───────────────────────────────────────────────────────
         m.syngas_lhv_mj_kg = self._calc_syngas_lhv(syngas.mass_fractions)
+        m.syngas_lhv_mj_nm3 = self._calc_syngas_lhv_volumetric(
+            syngas, m.syngas_lhv_mj_kg
+        )
 
         # ── Cold Gas Efficiency ──────────────────────────────────────────────
         if biomass and biomass.mass_flow_kg_s > 0 and self.biomass_lhv_mj_kg > 0:
@@ -308,7 +334,14 @@ class MetricsCalculator:
                 )
 
         # ── Carbon Conversion Efficiency ─────────────────────────────────────
-        m.carbon_conversion_efficiency = self._calc_carbon_conversion(results, biomass)
+        carbon_conversion = self._calc_carbon_conversion(results, biomass)
+        if carbon_conversion is None:
+            m.warnings.append(
+                "Carbon conversion carbon basis unavailable for Gasifier_Biomass_Feed."
+            )
+            m.carbon_conversion_efficiency = 0.0
+        else:
+            m.carbon_conversion_efficiency = carbon_conversion
 
         # ── H2/CO Ratio ──────────────────────────────────────────────────────
         m.h2_co_ratio = self._calc_ratio(
@@ -362,7 +395,18 @@ class MetricsCalculator:
                 lhv += wf * LHV_MJ_KG[compound]
         return lhv
 
-    def _calc_carbon_conversion(self, results, biomass_stream) -> float:
+    @staticmethod
+    def _calc_syngas_lhv_volumetric(syngas_stream, syngas_lhv_mj_kg: float) -> float:
+        """Convert syngas LHV from a mass basis (MJ/kg) to a volumetric basis (MJ/Nm3)."""
+        if (
+            syngas_stream.mass_flow_kg_s <= 0
+            or syngas_stream.volumetric_flow_Nm3_h <= 0
+        ):
+            return 0.0
+        energy_flow_mj_h = syngas_stream.mass_flow_kg_s * syngas_lhv_mj_kg * 3600.0
+        return energy_flow_mj_h / syngas_stream.volumetric_flow_Nm3_h
+
+    def _calc_carbon_conversion(self, results, biomass_stream) -> float | None:
         """
         Carbon Conversion Efficiency = C in gas products / C in feed.
 
@@ -372,51 +416,45 @@ class MetricsCalculator:
         if biomass_stream is None or biomass_stream.mass_flow_kg_s <= 0:
             return 0.0
 
-        # Carbon fraction in biomass (from mass fractions, approximated)
-        # CO: 12/28 = 0.4286 C by mass,  CO2: 12/44 = 0.2727,  CH4: 12/16 = 0.75
-        carbon_in_co = biomass_stream.mass_fractions.get("Carbon monoxide", 0.0) * (
-            12.011 / 28.010
-        )
-        carbon_in_co2 = biomass_stream.mass_fractions.get("Carbon dioxide", 0.0) * (
-            12.011 / 44.010
-        )
-        carbon_in_ch4 = biomass_stream.mass_fractions.get("Methane", 0.0) * (
-            12.011 / 16.043
-        )
-        total_carbon_frac_feed = carbon_in_co + carbon_in_co2 + carbon_in_ch4
-
-        if total_carbon_frac_feed <= 0:
+        carbon_feed_kg_s = self._calc_feed_carbon_mass_flow(biomass_stream)
+        if carbon_feed_kg_s is None or carbon_feed_kg_s <= 0:
             logger.debug(
-                "Carbon fraction in biomass feed is zero — CCE not calculable."
+                "Carbon basis unavailable in biomass feed — CCE not calculable."
             )
-            return 0.0
-
-        carbon_feed_kg_s = biomass_stream.mass_flow_kg_s * total_carbon_frac_feed
+            return None
 
         # Sum carbon in all outlet gas streams
         carbon_gas_kg_s = 0.0
-        c_species = {
-            "Carbon monoxide": 12.011 / 28.010,
-            "Carbon dioxide": 12.011 / 44.010,
-            "Methane": 12.011 / 16.043,
-            "Ethylene": 24.022 / 28.053,
-            "Ethane": 24.022 / 30.069,
-            "Naphthalene": 120.110 / 128.174,
-            "Toluene": 84.077 / 92.140,
-        }
 
         for stream_name in ["Final_Syngas", "Syngas_Pre_PEM", "Syngas_Pre_TRC"]:
             s = results.get_stream(stream_name)
             if s is None or s.mass_flow_kg_s <= 0:
                 continue
-            for compound, c_frac in c_species.items():
-                wf = s.mass_fractions.get(compound, 0.0)
-                carbon_gas_kg_s += s.mass_flow_kg_s * wf * c_frac
+            carbon_gas_kg_s += self._calc_stream_carbon_mass_flow(s)
             break  # Use only the first (most downstream) stream found
 
         if carbon_feed_kg_s > 0:
             return min(carbon_gas_kg_s / carbon_feed_kg_s, 1.0)
         return 0.0
+
+    def _calc_feed_carbon_mass_flow(self, biomass_stream) -> float | None:
+        """Compute biomass-feed carbon mass flow from an explicit basis or a surrogate stream."""
+        if self.biomass_carbon_mass_fraction is not None:
+            return biomass_stream.mass_flow_kg_s * self.biomass_carbon_mass_fraction
+
+        inferred_carbon_kg_s = self._calc_stream_carbon_mass_flow(biomass_stream)
+        if inferred_carbon_kg_s > 0:
+            return inferred_carbon_kg_s
+        return None
+
+    @staticmethod
+    def _calc_stream_carbon_mass_flow(stream) -> float:
+        """Compute the carbon mass flow in a stream from its carbon-bearing species."""
+        carbon_mass_flow = 0.0
+        for compound, carbon_fraction in CARBON_MASS_FRACTION.items():
+            wf = stream.mass_fractions.get(compound, 0.0)
+            carbon_mass_flow += stream.mass_flow_kg_s * wf * carbon_fraction
+        return carbon_mass_flow
 
     @staticmethod
     def _calc_ratio(mole_fractions: dict, numerator: str, denominator: str) -> float:
