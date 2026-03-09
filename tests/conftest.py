@@ -72,6 +72,7 @@ FILE_MARKERS = {
     "test_builder.py": ("contract",),
     "test_config_loader.py": ("contract",),
     "test_gasification_build.py": ("contract",),
+    "test_reactions.py": ("contract",),
     "test_sweep.py": ("contract",),
     "test_topology.py": ("contract",),
     "test_acceptance_baseline.py": ("acceptance", "integration"),
@@ -84,6 +85,7 @@ def pytest_collection_modifyitems(config, items):
     dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
     automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
     dwsim_available = os.path.exists(automation_dll)
+    run_dwsim_tests = os.environ.get("RUN_DWSIM_TESTS") == "1"
 
     # Only skip tests that require the DWSIM runtime.
     #
@@ -97,13 +99,6 @@ def pytest_collection_modifyitems(config, items):
     # regardless of whether DWSIM is installed.
     DWSIM_TEST_FILES = {"test_standalone.py", "test_gasification_module.py"}
 
-    skip_dwsim = pytest.mark.skip(
-        reason=(
-            f"DWSIM not installed — DLL not found at {automation_dll}. "
-            "Only DWSIM-dependent tests are skipped."
-        )
-    )
-
     for item in items:
         for marker_name in FILE_MARKERS.get(item.fspath.basename, ()):
             item.add_marker(getattr(pytest.mark, marker_name))
@@ -112,4 +107,18 @@ def pytest_collection_modifyitems(config, items):
         has_dwsim_marker = item.get_closest_marker("dwsim") is not None
 
         if not dwsim_available and (in_dwsim_file or has_dwsim_marker):
+            skip_dwsim = pytest.mark.skip(
+                reason=(
+                    f"DWSIM not installed — DLL not found at {automation_dll}. "
+                    "Only DWSIM-dependent tests are skipped."
+                )
+            )
+            item.add_marker(skip_dwsim)
+        elif (in_dwsim_file or has_dwsim_marker) and not run_dwsim_tests:
+            skip_dwsim = pytest.mark.skip(
+                reason=(
+                    "DWSIM-backed tests are opt-in. Set RUN_DWSIM_TESTS=1 to execute "
+                    "live runtime integration checks."
+                )
+            )
             item.add_marker(skip_dwsim)

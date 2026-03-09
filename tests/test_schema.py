@@ -123,6 +123,7 @@ class TestReactorConfig:
                 ReactionEntry(
                     name="Water Gas",
                     stoichiometry="C + H2O -> CO + H2",
+                    base_component="Water",
                     conversion=0.70,
                 )
             ],

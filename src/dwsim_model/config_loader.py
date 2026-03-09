@@ -260,7 +260,8 @@ class ConfigLoader:
             validate_stream_config(props, stream_name=stream_name)
 
         for reactor_name, reactor_block in resolved.get("reactors", {}).items():
-            reactor_payload = reactor_block.get("reactor", {})
+            reactor_payload = dict(reactor_block.get("reactor", {}))
+            reactor_payload["reactions"] = reactor_block.get("reactions", [])
             validate_reactor_config(
                 reactor_payload,
                 reactor_name=reactor_payload.get("name", reactor_name),

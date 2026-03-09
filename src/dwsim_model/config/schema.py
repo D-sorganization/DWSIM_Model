@@ -133,6 +133,15 @@ class ReactionEntry(BaseModel):
     conversion: Optional[float] = Field(None, ge=0.0, le=1.0)
     heat_of_reaction_kJ_mol: Optional[float] = None
     type: Optional[str] = None  # "equilibrium" | "kinetic" | "conversion"
+    kinetics: Optional["KineticParameters"] = None
+
+
+class KineticParameters(BaseModel):
+    """Arrhenius-style kinetic parameters for a PFR reaction."""
+
+    pre_exponential_A: float = Field(..., gt=0.0)
+    activation_energy_J_mol: float = Field(..., gt=0.0)
+    reaction_order_n: float = Field(..., ge=0.0)
 
 
 class ReactorConfig(BaseModel):
@@ -145,7 +154,47 @@ class ReactorConfig(BaseModel):
     mode: str = Field(
         "isothermal", description="isothermal | adiabatic | specified_duty"
     )
+    volume_m3: Optional[float] = Field(None, gt=0.0)
+    length_m: Optional[float] = Field(None, gt=0.0)
+    diameter_m: Optional[float] = Field(None, gt=0.0)
     reactions: list[ReactionEntry] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_reactor_contract(self) -> "ReactorConfig":
+        for reaction in self.reactions:
+            if self.type == "RCT_Conversion":
+                if reaction.base_component is None:
+                    raise ValueError(
+                        f"Conversion reaction '{reaction.name}' requires base_component."
+                    )
+                if reaction.conversion is None:
+                    raise ValueError(
+                        f"Conversion reaction '{reaction.name}' requires conversion."
+                    )
+
+            if self.type == "RCT_PFR":
+                if reaction.base_component is None:
+                    raise ValueError(
+                        f"PFR reaction '{reaction.name}' requires base_component."
+                    )
+                if reaction.kinetics is None:
+                    raise ValueError(
+                        f"PFR reaction '{reaction.name}' requires kinetics."
+                    )
+
+        if self.type == "RCT_PFR":
+            missing_geometry = [
+                field_name
+                for field_name in ("volume_m3", "length_m", "diameter_m")
+                if getattr(self, field_name) is None
+            ]
+            if missing_geometry:
+                raise ValueError(
+                    "PFR reactor requires geometry fields: "
+                    + ", ".join(missing_geometry)
+                )
+
+        return self
 
 
 # ─────────────────────────────────────────────────────────────────────────────
