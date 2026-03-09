@@ -41,10 +41,16 @@ jobs:
       - run: pip install pytest pytest-cov
       - run: if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         shell: bash
-      
-      - name: Download DWSIM (Requires local setup script or cached dlls)
+
+      - name: Unit and Contract Tests
+        run: pytest tests/ -m "unit or contract" --cov=src
+
+      - name: Acceptance Tests
+        run: pytest tests/ -m "acceptance"
+
+      - name: DWSIM Integration Tests
         continue-on-error: true
         shell: bash
         run: |
-          echo "Simulating tests without DWSIM for now in CI, until DWSIM CLI installer is added."
-          pytest tests/ -m "not integration" --cov=src || echo "::warning::Tests skipped/failed due to missing DWSIM in Windows CI"
+          echo "Running DWSIM-marked tests separately. They will skip or soft-fail until DWSIM is provisioned in CI."
+          pytest tests/ -m "dwsim" || echo "::warning::DWSIM-backed tests skipped/failed due to missing runtime in Windows CI"

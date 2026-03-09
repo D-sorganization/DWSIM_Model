@@ -65,6 +65,20 @@ if not clr_available:
     core.FlowsheetBuilder.add_property_package = patched_add_pp
 
 
+FILE_MARKERS = {
+    "test_biomass_decomposer.py": ("unit",),
+    "test_metrics.py": ("unit",),
+    "test_schema.py": ("unit",),
+    "test_builder.py": ("contract",),
+    "test_config_loader.py": ("contract",),
+    "test_gasification_build.py": ("contract",),
+    "test_sweep.py": ("contract",),
+    "test_acceptance_baseline.py": ("acceptance", "integration"),
+    "test_gasification_module.py": ("dwsim", "integration"),
+    "test_standalone.py": ("dwsim", "integration"),
+}
+
+
 def pytest_collection_modifyitems(config, items):
     dwsim_path = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
     automation_dll = os.path.join(dwsim_path, "DWSIM.Automation.dll")
@@ -82,15 +96,19 @@ def pytest_collection_modifyitems(config, items):
     # regardless of whether DWSIM is installed.
     DWSIM_TEST_FILES = {"test_standalone.py", "test_gasification_module.py"}
 
-    if not dwsim_available:
-        skip_dwsim = pytest.mark.skip(
-            reason=(
-                f"DWSIM not installed — DLL not found at {automation_dll}. "
-                "Only DWSIM-dependent tests are skipped."
-            )
+    skip_dwsim = pytest.mark.skip(
+        reason=(
+            f"DWSIM not installed — DLL not found at {automation_dll}. "
+            "Only DWSIM-dependent tests are skipped."
         )
-        for item in items:
-            in_dwsim_file = item.fspath.basename in DWSIM_TEST_FILES
-            has_dwsim_marker = item.get_closest_marker("dwsim") is not None
-            if in_dwsim_file or has_dwsim_marker:
-                item.add_marker(skip_dwsim)
+    )
+
+    for item in items:
+        for marker_name in FILE_MARKERS.get(item.fspath.basename, ()):
+            item.add_marker(getattr(pytest.mark, marker_name))
+
+        in_dwsim_file = item.fspath.basename in DWSIM_TEST_FILES
+        has_dwsim_marker = item.get_closest_marker("dwsim") is not None
+
+        if not dwsim_available and (in_dwsim_file or has_dwsim_marker):
+            item.add_marker(skip_dwsim)
