@@ -131,13 +131,11 @@ def _default_model_runner(config: dict) -> dict:
     from dwsim_model.results.extractor import ResultsExtractor
     from dwsim_model.results.metrics import MetricsCalculator
 
-    flowsheet = GasificationFlowsheet()
-    # Inject the patched config dict directly so we bypass file I/O
-    flowsheet._injected_config = config
+    flowsheet = GasificationFlowsheet(runtime_config=config)
     flowsheet.build_flowsheet()  # fix: was build() - method name mismatch
     flowsheet.run()  # fix: was solve() - method name mismatch
 
-    extractor = ResultsExtractor()
+    extractor = ResultsExtractor(compound_names=list(flowsheet.compound_set))
     results = extractor.extract(flowsheet.builder)
 
     calculator = MetricsCalculator()

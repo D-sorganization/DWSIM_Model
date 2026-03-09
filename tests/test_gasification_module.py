@@ -114,3 +114,34 @@ def test_build_flowsheet_fails_when_config_application_fails(monkeypatch):
 
     with pytest.raises(RuntimeError, match="Failed to apply external config"):
         gf.build_flowsheet()
+
+
+def test_load_config_prefers_injected_runtime_config(monkeypatch):
+    observed = {}
+
+    class RecordingLoader:
+        def __init__(self, config_path=None, config_data=None):
+            observed["config_path"] = config_path
+            observed["config_data"] = config_data
+
+        def load(self):
+            observed["loaded"] = True
+            return {"feeds": {}}
+
+        def apply_to_flowsheet(self, builder, materials, energy_streams):
+            observed["applied"] = (builder, materials, energy_streams)
+
+    gf = GasificationFlowsheet(builder=FlowsheetBuilder(), mode=ReactorMode.MIXED)
+    gf._injected_config = {"feeds": {"Gasifier_Biomass_Feed": {"mass_flow_kg_s": 7.5}}}
+
+    monkeypatch.setattr("dwsim_model.gasification.ConfigLoader", RecordingLoader)
+
+    gf._load_config()
+
+    assert observed["config_data"] == gf._injected_config
+    assert observed["loaded"] is True
+    assert observed["applied"] == (
+        gf.builder,
+        gf.builder.materials,
+        gf.builder.energy_streams,
+    )
