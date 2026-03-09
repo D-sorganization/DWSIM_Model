@@ -276,6 +276,89 @@ class TestMetricsCalculator:
         assert hasattr(metrics, "warnings")
         assert isinstance(metrics.warnings, list)
 
+    def test_carbon_conversion_uses_explicit_biomass_carbon_basis(self):
+        calculator = MetricsCalculator(biomass_carbon_mass_fraction=0.50)
+        biomass_feed = _make_stream(
+            mass_flow_kg_s=4.0,
+            mass_fractions={"Hydrogen": 1.0},
+        )
+        syngas = _make_stream(
+            mass_flow_kg_s=2.0,
+            mass_fractions={"Methane": 1.0},
+            volumetric_flow_Nm3_h=500.0,
+        )
+        results = _make_results(
+            streams={
+                "Gasifier_Biomass_Feed": biomass_feed,
+                "Final_Syngas": syngas,
+            }
+        )
+
+        metrics = calculator.calculate(results)
+
+        expected = (2.0 * (12.011 / 16.043)) / (4.0 * 0.50)
+        assert metrics.carbon_conversion_efficiency == pytest.approx(expected)
+
+    def test_carbon_conversion_falls_back_to_surrogate_stream_basis(self):
+        biomass_feed = _make_stream(
+            mass_flow_kg_s=10.0,
+            mass_fractions={"Carbon monoxide": 0.50, "Hydrogen": 0.50},
+        )
+        syngas = _make_stream(
+            mass_flow_kg_s=5.0,
+            mass_fractions={"Carbon monoxide": 0.50, "Hydrogen": 0.50},
+            volumetric_flow_Nm3_h=800.0,
+        )
+        results = _make_results(
+            streams={
+                "Gasifier_Biomass_Feed": biomass_feed,
+                "Final_Syngas": syngas,
+            }
+        )
+
+        metrics = self.calculator.calculate(results)
+
+        assert metrics.carbon_conversion_efficiency == pytest.approx(0.5)
+
+    def test_carbon_conversion_warns_when_feed_carbon_basis_unavailable(self):
+        biomass_feed = _make_stream(
+            mass_flow_kg_s=4.0,
+            mass_fractions={"Hydrogen": 1.0},
+        )
+        syngas = _make_stream(
+            mass_flow_kg_s=1.0,
+            mass_fractions={"Carbon monoxide": 1.0},
+            volumetric_flow_Nm3_h=100.0,
+        )
+        results = _make_results(
+            streams={
+                "Gasifier_Biomass_Feed": biomass_feed,
+                "Final_Syngas": syngas,
+            }
+        )
+
+        metrics = self.calculator.calculate(results)
+
+        assert metrics.carbon_conversion_efficiency == 0.0
+        assert any("carbon basis" in warning.lower() for warning in metrics.warnings)
+
+    def test_syngas_lhv_volumetric_basis_is_computed(self):
+        syngas = _make_stream(
+            mass_flow_kg_s=2.0,
+            mass_fractions={"Methane": 1.0},
+            volumetric_flow_Nm3_h=1000.0,
+        )
+        results = _make_results(streams={"Final_Syngas": syngas})
+
+        metrics = self.calculator.calculate(results)
+
+        expected = (2.0 * 50.05 * 3600.0) / 1000.0
+        assert metrics.syngas_lhv_mj_nm3 == pytest.approx(expected)
+
+    def test_invalid_biomass_carbon_basis_is_rejected(self):
+        with pytest.raises(ValueError, match="biomass_carbon_mass_fraction"):
+            MetricsCalculator(biomass_carbon_mass_fraction=1.5)
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Integration: decomposer → metrics pathway
