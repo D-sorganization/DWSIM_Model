@@ -22,6 +22,14 @@ import logging
 from pathlib import Path
 from typing import Any
 
+from dwsim_model.config.schema import (
+    MasterConfig,
+    ScenarioConfig,
+    validate_master_config,
+    validate_reactor_config,
+    validate_stream_config,
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -66,6 +74,26 @@ def _load_file(path: Path) -> dict:
             return json.load(fh)
         else:
             raise ValueError(f"Unsupported config format: {suffix}")
+
+
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    """Recursively merge *override* into *base* and return the merged dict."""
+    merged = dict(base)
+    for key, value in override.items():
+        current = merged.get(key)
+        if isinstance(current, dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(current, value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _is_runtime_config(raw: dict[str, Any]) -> bool:
+    """Return True when the config is already expanded to stream dictionaries."""
+    feeds = raw.get("feeds")
+    if isinstance(feeds, dict) and feeds:
+        return all(isinstance(value, dict) for value in feeds.values())
+    return "energy_streams" in raw
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -127,34 +155,102 @@ class ConfigLoader:
         those files and merge them.  If ``raw`` already has a ``feeds`` key
         (legacy JSON style), return it unchanged.
         """
-        if "feeds" in raw or "energy_streams" in raw:
-            return raw  # already flat
+        if _is_runtime_config(raw):
+            resolved = dict(raw)
+        else:
+            master = validate_master_config(raw)
+            resolved = self._expand_master_config(master, raw)
 
-        merged: dict = {
+        self._validate_resolved_config(resolved)
+        return resolved
+
+    def _expand_master_config(
+        self, master: MasterConfig, raw: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Expand master config references into a runtime-ready dictionary."""
+        resolved: dict[str, Any] = {
+            "model": master.model.model_dump(),
+            "reactor_mode": master.reactor_mode,
+            "compound_set": master.compound_set,
             "feeds": {},
+            "reactors": {},
             "energy_streams": {},
-            "units": raw.get("units", {}),
+            "equipment": {},
+            "output": master.output.model_dump(),
+            "scenario": {},
+            "targets": {},
         }
-        config_dir = self.config_path.parent if self.config_path else Path(".")
 
-        for _section, sub_path in raw.get("feeds", {}).items():
-            try:
-                sub = _load_file(config_dir / sub_path)
-                for stream_name, props in sub.items():
-                    if isinstance(props, dict):
-                        merged["feeds"][stream_name] = props
-            except Exception as exc:
-                logger.warning(f"Could not load sub-config '{sub_path}': {exc}")
+        for _section, sub_path in master.feeds.items():
+            sub = _load_file(self._resolve_ref_path(sub_path))
+            for stream_name, props in sub.items():
+                if isinstance(props, dict):
+                    resolved["feeds"][stream_name] = props
 
-        energy_ref = raw.get("energy")
-        if energy_ref:
-            try:
-                energy_data = _load_file(config_dir / energy_ref)
-                merged["energy_streams"].update(energy_data.get("energy_streams", {}))
-            except Exception as exc:
-                logger.warning(f"Could not load energy config '{energy_ref}': {exc}")
+        for reactor_name, sub_path in master.reactors.items():
+            sub = _load_file(self._resolve_ref_path(sub_path))
+            resolved["reactors"][reactor_name] = sub
 
-        return merged
+        if master.energy:
+            energy_data = _load_file(self._resolve_ref_path(master.energy))
+            resolved["energy_streams"].update(energy_data.get("energy_streams", {}))
+
+        if master.equipment:
+            resolved["equipment"] = _load_file(self._resolve_ref_path(master.equipment))
+
+        scenario_ref = raw.get("scenario")
+        if scenario_ref:
+            scenario_data = _load_file(self._resolve_ref_path(str(scenario_ref)))
+            resolved["scenario"] = self._validate_scenario_config(
+                scenario_data
+            ).model_dump()
+            overrides = scenario_data.get("overrides", {})
+            resolved = _deep_merge(resolved, overrides)
+            resolved["targets"] = scenario_data.get("targets", {})
+
+        return resolved
+
+    def _resolve_ref_path(self, ref: str | Path) -> Path:
+        """Resolve config references relative to either the config dir or project root."""
+        ref_path = Path(ref)
+        if ref_path.is_absolute():
+            return ref_path
+        if self.config_path is None:
+            return ref_path
+
+        config_dir = self.config_path.parent
+        project_root = config_dir.parent
+        candidates = [config_dir / ref_path, project_root / ref_path]
+        for candidate in candidates:
+            if candidate.exists():
+                return candidate
+        raise FileNotFoundError(f"Referenced config file not found: {ref_path}")
+
+    def _validate_scenario_config(
+        self, scenario_data: dict[str, Any]
+    ) -> ScenarioConfig:
+        """Validate a scenario config block."""
+        scenario = scenario_data.get("scenario", {})
+        return ScenarioConfig.model_validate(
+            {
+                "name": scenario.get("name", "unnamed"),
+                "description": scenario.get("description", ""),
+                "overrides": scenario_data.get("overrides", {}),
+                "targets": scenario_data.get("targets"),
+            }
+        )
+
+    def _validate_resolved_config(self, resolved: dict[str, Any]) -> None:
+        """Validate resolved streams and reactors before runtime application."""
+        for stream_name, props in resolved.get("feeds", {}).items():
+            validate_stream_config(props, stream_name=stream_name)
+
+        for reactor_name, reactor_block in resolved.get("reactors", {}).items():
+            reactor_payload = reactor_block.get("reactor", {})
+            validate_reactor_config(
+                reactor_payload,
+                reactor_name=reactor_payload.get("name", reactor_name),
+            )
 
     # ─────────────────────────────────────────────────────────────────────────
 

@@ -47,7 +47,7 @@ Gasifier_Biomass_Feed:
   proximate_analysis:
     moisture:       0.15
     volatile_matter: 0.72
-    fixed_carbon:   0.13
+    fixed_carbon:   0.03
     ash:            0.10   # NOTE: ash + others must sum to 1.0
 
   # Higher heating value (for energy balance validation, MJ/kg)
