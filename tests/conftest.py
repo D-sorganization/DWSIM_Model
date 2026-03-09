@@ -9,7 +9,11 @@ sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
 
-clr_available = importlib.util.find_spec("clr") is not None
+dwsim_path_env = os.environ.get("DWSIM_PATH", r"C:\Users\diete\AppData\Local\DWSIM")
+automation_dll = os.path.join(dwsim_path_env, "DWSIM.Automation.dll")
+dwsim_available = os.path.exists(automation_dll)
+
+clr_available = importlib.util.find_spec("clr") is not None and dwsim_available
 
 if not clr_available:
     sys.modules["clr"] = MagicMock()

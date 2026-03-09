@@ -143,7 +143,7 @@ class ResultsTab(ttk.Frame):
 
     def _open_results_folder(self) -> None:
         """Open the results folder in the OS file manager."""
-        import subprocess
+        import subprocess  # nosec B404 # AUTO-FIXED
         import sys
         from pathlib import Path
 

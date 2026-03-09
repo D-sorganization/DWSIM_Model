@@ -246,14 +246,16 @@ class ResultsExtractor:
             val = obj.GetPropertyValue(prop_name)
             if val is not None:
                 return float(val)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug(
+                f"Exception getting property via GetPropertyValue: {exc}"
+            )  # AUTO-FIXED
         try:
             val = getattr(obj, prop_name)
             if val is not None:
                 return float(val)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug(f"Exception getting property via getattr: {exc}")  # AUTO-FIXED
         return default
 
     @staticmethod
