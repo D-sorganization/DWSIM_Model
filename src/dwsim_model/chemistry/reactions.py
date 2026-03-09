@@ -204,7 +204,9 @@ def configure_pem(pem_obj, sim) -> None:
         try:
             pem_obj.ReactorOperationMode = 0  # 0 = Isothermal in most DWSIM versions
         except AttributeError as exc:
-            logger.debug(f"AttributeError setting ReactorOperationMode: {exc}")  # AUTO-FIXED, Not critical — DWSIM will use default mode
+            logger.debug(
+                f"AttributeError setting ReactorOperationMode: {exc}"
+            )  # AUTO-FIXED, Not critical — DWSIM will use default mode
 
         # Add equilibrium reactions as constraints
         for rxn_def in reactions:
@@ -279,7 +281,9 @@ def configure_trc(trc_obj, sim) -> None:
                 try:
                     trc_obj.SetPropertyValue(prop, val)
                 except Exception as exc:
-                    logger.debug(f"Exception setting property {prop}: {exc}")  # AUTO-FIXED
+                    logger.debug(
+                        f"Exception setting property {prop}: {exc}"
+                    )  # AUTO-FIXED
 
         # Set adiabatic operation
         try:
@@ -306,7 +310,9 @@ def configure_trc(trc_obj, sim) -> None:
                         rxn_obj.ActivationEnergy = Ea
                         rxn_obj.ReactionOrder = n
                     except AttributeError as exc:
-                        logger.debug(f"AttributeError setting Arrhenius parameters: {exc}")  # AUTO-FIXED
+                        logger.debug(
+                            f"AttributeError setting Arrhenius parameters: {exc}"
+                        )  # AUTO-FIXED
                     trc_obj.Reactions.Add(rxn_obj.ID)
                     logger.debug(
                         f"Added kinetic reaction '{name}': A={A:.2e}, Ea={Ea:.0f} J/mol"

@@ -247,7 +247,9 @@ class ResultsExtractor:
             if val is not None:
                 return float(val)
         except Exception as exc:
-            logger.debug(f"Exception getting property via GetPropertyValue: {exc}")  # AUTO-FIXED
+            logger.debug(
+                f"Exception getting property via GetPropertyValue: {exc}"
+            )  # AUTO-FIXED
         try:
             val = getattr(obj, prop_name)
             if val is not None:

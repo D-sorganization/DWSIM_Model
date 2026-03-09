@@ -97,7 +97,9 @@ class FlowsheetBuilder:
                 try:
                     obj.GraphicObject.ShowObjectData = True
                 except Exception as exc:
-                    logger.debug(f"Exception setting GraphicObject.ShowObjectData: {exc}")  # AUTO-FIXED
+                    logger.debug(
+                        f"Exception setting GraphicObject.ShowObjectData: {exc}"
+                    )  # AUTO-FIXED
 
             if obj_type_name == "MaterialStream":
                 self.materials[name] = obj
