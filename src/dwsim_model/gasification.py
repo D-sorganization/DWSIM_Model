@@ -4,6 +4,11 @@ from enum import Enum
 from dwsim_model.core import FlowsheetBuilder
 from dwsim_model.config_loader import ConfigLoader
 from dwsim_model.constants import COMPOUNDS_STANDARD, DEFAULT_PROPERTY_PACKAGE
+from dwsim_model.topology import (
+    build_gasifier_stage,
+    build_pem_stage,
+    build_trc_stage,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -136,80 +141,6 @@ class GasificationFlowsheet:
         connection_failures: list[str] = []
 
         # ──────────────────────────────────────────────────────────────────────
-        # 1. Downdraft / Pre-Gasifier
-        # ──────────────────────────────────────────────────────────────────────
-        feed_biomass = b.add_object("MaterialStream", "Gasifier_Biomass_Feed", 0, 300)
-        feed_solids_g = b.add_object("MaterialStream", "Gasifier_Solids_Feed", 0, 350)
-        feed_ox_g = b.add_object("MaterialStream", "Gasifier_Oxygen_Feed", 0, 400)
-        feed_st_g = b.add_object("MaterialStream", "Gasifier_Steam_Feed", 0, 450)
-
-        gas_in_mixer = b.add_object("Mixer", "Gasifier_Inlet_Mixer", 100, 350)
-        gas_mixed_feed = b.add_object("MaterialStream", "Gasifier_Mixed_Feed", 150, 350)
-
-        # Sequential thermal stages
-        gas_cooler_loss = b.add_object("Cooler", "Gasifier_Heat_Loss_Block", 250, 350)
-        gas_feed_2 = b.add_object("MaterialStream", "Gasifier_Feed_PostLoss", 310, 350)
-        gas_cooler_jacket = b.add_object("Cooler", "Gasifier_Heat_To_Jacket", 400, 350)
-        gas_feed_final = b.add_object("MaterialStream", "Gasifier_Feed_Final", 460, 350)
-
-        gasifier = b.add_object(rtypes["gasifier"], "Downdraft_Gasifier", 550, 350)
-        s1 = b.add_object("MaterialStream", "Syngas_Pre_PEM", 650, 350)
-        gasifier_glass = b.add_object("MaterialStream", "Gasifier_Glass_Out", 650, 450)
-
-        e_gas_loss = b.add_object("EnergyStream", "E_Gasifier_HeatLoss", 250, 250)
-        gas_cw_in = b.add_object(
-            "MaterialStream", "Gasifier_Cooling_Water_In", 350, 500
-        )
-        gas_cw_out = b.add_object(
-            "MaterialStream", "Gasifier_Cooling_Steam_Out", 500, 500
-        )
-        gas_cooler = b.add_object("Heater", "Gasifier_Cooling_Jacket", 400, 450)
-        e_gas_flux = b.add_object("EnergyStream", "E_Gasifier_Flux_to_CW", 400, 400)
-
-        # ──────────────────────────────────────────────────────────────────────
-        # 2. PEM
-        # ──────────────────────────────────────────────────────────────────────
-        feed_solids_p = b.add_object("MaterialStream", "PEM_Solids_Feed", 650, 200)
-        feed_ox_p = b.add_object("MaterialStream", "PEM_Oxygen_Feed", 650, 250)
-        feed_st_p = b.add_object("MaterialStream", "PEM_Steam_Feed", 650, 300)
-
-        pem_in_mixer = b.add_object("Mixer", "PEM_Inlet_Mixer", 750, 350)
-        pem_mixed_feed = b.add_object("MaterialStream", "PEM_Mixed_Feed", 800, 350)
-
-        pem_heater_ac = b.add_object("Heater", "PEM_AC_Block", 900, 350)
-        pem_feed_2 = b.add_object("MaterialStream", "PEM_Feed_PostAC", 960, 350)
-        pem_heater_dc = b.add_object("Heater", "PEM_DC_Block", 1050, 350)
-        pem_feed_3 = b.add_object("MaterialStream", "PEM_Feed_PostDC", 1110, 350)
-        pem_cooler_loss = b.add_object("Cooler", "PEM_Heat_Loss_Block", 1200, 350)
-        pem_feed_final = b.add_object("MaterialStream", "PEM_Feed_Final", 1260, 350)
-
-        pem = b.add_object(rtypes["pem"], "PEM_Reactor", 1350, 350)
-        s2 = b.add_object("MaterialStream", "Syngas_Pre_TRC", 1450, 350)
-        pem_glass = b.add_object("MaterialStream", "PEM_Glass_Out", 1450, 450)
-
-        e_pem_ac = b.add_object("EnergyStream", "E_PEM_AC_Power", 900, 250)
-        e_pem_dc = b.add_object("EnergyStream", "E_PEM_DC_Power", 1050, 250)
-        e_pem_loss = b.add_object("EnergyStream", "E_PEM_HeatLoss", 1200, 250)
-
-        # ──────────────────────────────────────────────────────────────────────
-        # 3. TRC
-        # ──────────────────────────────────────────────────────────────────────
-        feed_solids_t = b.add_object("MaterialStream", "TRC_Solids_Feed", 1450, 200)
-        feed_ox_t = b.add_object("MaterialStream", "TRC_Oxygen_Feed", 1450, 250)
-        feed_st_t = b.add_object("MaterialStream", "TRC_Steam_Feed", 1450, 300)
-
-        trc_in_mixer = b.add_object("Mixer", "TRC_Inlet_Mixer", 1550, 350)
-        trc_mixed_feed = b.add_object("MaterialStream", "TRC_Mixed_Feed", 1600, 350)
-
-        trc_cooler_loss = b.add_object("Cooler", "TRC_Heat_Loss_Block", 1700, 350)
-        trc_feed_final = b.add_object("MaterialStream", "TRC_Feed_Final", 1760, 350)
-
-        trc = b.add_object(rtypes["trc"], "TRC_Reactor", 1850, 350)
-        s3 = b.add_object("MaterialStream", "Syngas_Pre_Quench", 1950, 350)
-
-        e_trc_loss = b.add_object("EnergyStream", "E_TRC_HeatLoss", 1700, 250)
-
-        # ──────────────────────────────────────────────────────────────────────
         # 4. Quench Vessel
         # ──────────────────────────────────────────────────────────────────────
         water_inj = b.add_object("MaterialStream", "Quench_Water_Injection", 1950, 200)
@@ -260,69 +191,22 @@ class GasificationFlowsheet:
                 connection_failures.append(message)
                 logger.error(message)
 
-        # Gasifier mixing
-        safe_connect(feed_biomass, gas_in_mixer, 0, 0)
-        safe_connect(feed_solids_g, gas_in_mixer, 0, 1)
-        safe_connect(feed_ox_g, gas_in_mixer, 0, 2)
-        safe_connect(feed_st_g, gas_in_mixer, 0, 3)
-        safe_connect(gas_in_mixer, gas_mixed_feed, 0, 0)
-
-        # Gasifier thermal sequence
-        safe_connect(gas_mixed_feed, gas_cooler_loss, 0, 0)
-        safe_connect(gas_cooler_loss, gas_feed_2, 0, 0)
-        safe_connect(gas_cooler_loss, e_gas_loss, 0, 0)
-        safe_connect(gas_feed_2, gas_cooler_jacket, 0, 0)
-        safe_connect(gas_cooler_jacket, gas_feed_final, 0, 0)
-        safe_connect(gas_cooler_jacket, e_gas_flux, 0, 0)
-
-        # Cooling jacket
-        safe_connect(gas_cw_in, gas_cooler, 0, 0)
-        safe_connect(gas_cooler, gas_cw_out, 0, 0)
-        safe_connect(gas_cooler, e_gas_flux, 0, 0)
-
-        # Gasifier reactor
-        safe_connect(gas_feed_final, gasifier, 0, 0)
-        safe_connect(gasifier, s1, 0, 0)
-        safe_connect(gasifier, gasifier_glass, 1, 0)
-
-        # PEM mixing
-        safe_connect(s1, pem_in_mixer, 0, 0)
-        safe_connect(feed_solids_p, pem_in_mixer, 0, 1)
-        safe_connect(feed_ox_p, pem_in_mixer, 0, 2)
-        safe_connect(feed_st_p, pem_in_mixer, 0, 3)
-        safe_connect(pem_in_mixer, pem_mixed_feed, 0, 0)
-
-        # PEM thermal sequence
-        safe_connect(pem_mixed_feed, pem_heater_ac, 0, 0)
-        safe_connect(pem_heater_ac, pem_feed_2, 0, 0)
-        safe_connect(pem_heater_ac, e_pem_ac, 0, 0)
-        safe_connect(pem_feed_2, pem_heater_dc, 0, 0)
-        safe_connect(pem_heater_dc, pem_feed_3, 0, 0)
-        safe_connect(pem_heater_dc, e_pem_dc, 0, 0)
-        safe_connect(pem_feed_3, pem_cooler_loss, 0, 0)
-        safe_connect(pem_cooler_loss, pem_feed_final, 0, 0)
-        safe_connect(pem_cooler_loss, e_pem_loss, 0, 0)
-
-        # PEM reactor
-        safe_connect(pem_feed_final, pem, 0, 0)
-        safe_connect(pem, s2, 0, 0)
-        safe_connect(pem, pem_glass, 1, 0)
-
-        # TRC mixing
-        safe_connect(s2, trc_in_mixer, 0, 0)
-        safe_connect(feed_solids_t, trc_in_mixer, 0, 1)
-        safe_connect(feed_ox_t, trc_in_mixer, 0, 2)
-        safe_connect(feed_st_t, trc_in_mixer, 0, 3)
-        safe_connect(trc_in_mixer, trc_mixed_feed, 0, 0)
-
-        # TRC thermal sequence
-        safe_connect(trc_mixed_feed, trc_cooler_loss, 0, 0)
-        safe_connect(trc_cooler_loss, trc_feed_final, 0, 0)
-        safe_connect(trc_cooler_loss, e_trc_loss, 0, 0)
-
-        # TRC reactor (PFR has only one outlet — no glass port)
-        safe_connect(trc_feed_final, trc, 0, 0)
-        safe_connect(trc, s3, 0, 0)
+        gasifier_stage = build_gasifier_stage(b, rtypes["gasifier"], safe_connect)
+        s1 = gasifier_stage["syngas_out"]
+        build_pem_stage(
+            b,
+            rtypes["pem"],
+            safe_connect,
+            syngas_inlet=s1,
+        )
+        s2 = b.materials["Syngas_Pre_TRC"]
+        build_trc_stage(
+            b,
+            rtypes["trc"],
+            safe_connect,
+            syngas_inlet=s2,
+        )
+        s3 = b.materials["Syngas_Pre_Quench"]
 
         # Quench
         safe_connect(s3, quench, 0, 0)

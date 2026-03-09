@@ -1,6 +1,7 @@
 import logging
 from dwsim_model.core import FlowsheetBuilder, get_automation
 from dwsim_model.constants import COMPOUNDS_STANDARD, DEFAULT_PROPERTY_PACKAGE
+from dwsim_model.topology import build_gasifier_stage
 
 logger = logging.getLogger(__name__)
 
@@ -27,38 +28,6 @@ class GasifierStandaloneFlowsheet:
     def build_flowsheet(self):
         """Constructs an isolated Gasifier block with its immediate streams."""
         b = self.builder
-        # Inputs
-        feed_biomass = b.add_object("MaterialStream", "Gasifier_Biomass_Feed", 0, 300)
-        feed_solids_g = b.add_object("MaterialStream", "Gasifier_Solids_Feed", 0, 350)
-        feed_ox_g = b.add_object("MaterialStream", "Gasifier_Oxygen_Feed", 0, 400)
-        feed_st_g = b.add_object("MaterialStream", "Gasifier_Steam_Feed", 0, 450)
-
-        gas_in_mixer = b.add_object("Mixer", "Gasifier_Inlet_Mixer", 100, 350)
-        gas_mixed_feed = b.add_object("MaterialStream", "Gasifier_Mixed_Feed", 150, 350)
-
-        # Thermal Sequence
-        gas_cooler_loss = b.add_object("Cooler", "Gasifier_Heat_Loss_Block", 250, 350)
-        gas_feed_2 = b.add_object("MaterialStream", "Gasifier_Feed_PostLoss", 310, 350)
-        gas_cooler_jacket = b.add_object("Cooler", "Gasifier_Heat_To_Jacket", 400, 350)
-        gas_feed_final = b.add_object("MaterialStream", "Gasifier_Feed_Final", 460, 350)
-
-        # Reactor
-        gasifier = b.add_object("RCT_Conversion", "Downdraft_Gasifier", 550, 350)
-
-        # Outputs
-        s1 = b.add_object("MaterialStream", "Syngas_Pre_PEM", 650, 350)
-        gasifier_glass = b.add_object("MaterialStream", "Gasifier_Glass_Out", 650, 450)
-
-        # Energy / Cooling
-        e_gas_loss = b.add_object("EnergyStream", "E_Gasifier_HeatLoss", 250, 250)
-        gas_cw_in = b.add_object(
-            "MaterialStream", "Gasifier_Cooling_Water_In", 350, 500
-        )
-        gas_cw_out = b.add_object(
-            "MaterialStream", "Gasifier_Cooling_Steam_Out", 500, 500
-        )
-        gas_cooler = b.add_object("Heater", "Gasifier_Cooling_Jacket", 400, 450)
-        e_gas_flux = b.add_object("EnergyStream", "E_Gasifier_Flux_to_CW", 400, 400)
 
         def safe_connect(src, tgt, p1=0, p2=0):
             try:
@@ -66,28 +35,7 @@ class GasifierStandaloneFlowsheet:
             except Exception as e:
                 logger.warning(f"Failed to connect isolated node: {src} -> {tgt} ({e})")
 
-        # Map topology
-        safe_connect(feed_biomass, gas_in_mixer, 0, 0)
-        safe_connect(feed_solids_g, gas_in_mixer, 0, 1)
-        safe_connect(feed_ox_g, gas_in_mixer, 0, 2)
-        safe_connect(feed_st_g, gas_in_mixer, 0, 3)
-        safe_connect(gas_in_mixer, gas_mixed_feed, 0, 0)
-
-        safe_connect(gas_mixed_feed, gas_cooler_loss, 0, 0)
-        safe_connect(gas_cooler_loss, gas_feed_2, 0, 0)
-        safe_connect(gas_cooler_loss, e_gas_loss, 0, 0)
-
-        safe_connect(gas_feed_2, gas_cooler_jacket, 0, 0)
-        safe_connect(gas_cooler_jacket, gas_feed_final, 0, 0)
-        safe_connect(gas_cooler_jacket, e_gas_flux, 0, 0)
-
-        safe_connect(gas_cw_in, gas_cooler, 0, 0)
-        safe_connect(gas_cooler, gas_cw_out, 0, 0)
-        safe_connect(gas_cooler, e_gas_flux, 0, 0)
-
-        safe_connect(gas_feed_final, gasifier, 0, 0)
-        safe_connect(gasifier, s1, 0, 0)
-        safe_connect(gasifier, gasifier_glass, 1, 0)
+        build_gasifier_stage(b, "RCT_Conversion", safe_connect)
 
         # Basic reaction property assignment
         ops = self.builder.operations
