@@ -1,5 +1,5 @@
 # Code Quality Review Report
-**Date:** 2026-03-06
+**Date:** 2026-03-09
 
 ## Overview
 This report provides a code quality review of recent Git history based on `.jules/review_data/diffs.txt` and `.jules/review_data/commits.txt`.
@@ -7,27 +7,42 @@ This report provides a code quality review of recent Git history based on `.jule
 ## Findings
 
 ### 1. Coherent Plan Alignment
-The recent commits show significant refactoring towards building the flowsheet, including separating the `standalone` module with test additions. There are numerous fixes corresponding to Engineering Review March 2026. The plan appears mostly aligned with adding bug fixes.
+The recent commits generally align with the project goals of improving documentation, addressing issue queue items, and creating tools. Code modifications follow the documented steps in issue trackers.
 
 ### 2. Damaging Changes
-No explicitly damaging or malicious code was found in the latest diffs.
+No obviously damaging, malicious, or highly risky code patterns were found in the latest diffs.
 
 ### 3. Truncated/Incomplete Work
-- Work in creating robust tests for GUI styling falls back to defaults without properly checking or fixing themes.
-- Reorganization work includes broad sweeping mock objects. Some exception handles have warnings that are not addressed further, leading to potential data loss or partial execution without stopping gracefully.
+- Commit aecc384 in src/dwsim_model/core.py: Potential incomplete work `pass`
+- Commit aecc384 in src/dwsim_model/standalone/gasifier_model.py: Potential incomplete work `pass`
+- Commit 67b45ac in src/dwsim_model/chemistry/reactions.py: Potential incomplete work `pass  # Not critical — DWSIM will use default mode`
+- Commit 67b45ac in src/dwsim_model/gui/widgets.py: Potential incomplete work `pass  # Fall back to default`
+- Commit 67b45ac in src/dwsim_model/results/extractor.py: Potential incomplete work `pass`
+- Commit 67b45ac in src/dwsim_model/gui/widgets.py: Potential incomplete work `pass`
+- Commit 67b45ac in src/dwsim_model/chemistry/reactions.py: Potential incomplete work `pass`
 
 ### 4. Placeholders (TODO, FIXME)
-- "DbC Placeholder: Users modify kinetics here" accompanied by a `pass` statement exists in `src/dwsim_model/standalone/gasifier_model.py`.
+- Commit aecc384 in src/dwsim_model/standalone/gasifier_model.py: DbC Placeholder found `# DbC Placeholder: Users modify kinetics here.`
 
 ### 5. Workarounds
-- Mocks and stubbed runner in `tests/test_sweep.py` return predetermined KPIs instead of invoking DWSIM logic.
-- Silent/Pass exceptions are extensively used in property getting (`src/dwsim_model/utils/extractor.py`) where exceptions are just ignored and falls back to passing.
-- `safe_connect` uses `try-except` that only logs a warning instead of properly handling or bubbling the error, thus a workaround to avoid failing if nodes are isolated in `src/dwsim_model/standalone/gasifier_model.py`, `src/dwsim_model/standalone/pem_model.py`, and `src/dwsim_model/standalone/trc_model.py`.
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `self.sweep = ParameterSweep(model_runner=self.mock_runner)`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `self.mock_runner = _make_mock_runner()`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `assert len(self.mock_runner.calls) == 4`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `mock_runner = _make_mock_runner()`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `assert len(self.mock_runner.calls) == 3`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `for i, call_config in enumerate(self.mock_runner.calls):`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `sweep = ParameterSweep(model_runner=mock_runner)`
+- Commit 67b45ac in tests/test_sweep.py: Mock runner usage `def _make_mock_runner(kpi_fn=None):`
 
 ### 6. CI/CD Gaming
-- Widespread use of `try...except Exception: pass` and similar constructs suppresses actual issues.
-- Generating a lot of fake data in unit tests.
+- Commit 56a6d20 in src/dwsim_model/gui/main_window.py: Potential CI/CD bypass `def _make_scenario_cmd(s: str):  # type: ignore[no-untyped-def]`
+- Commit 67b45ac in src/dwsim_model/config/schema.py: Potential CI/CD bypass `O: float = Field(..., ge=0.0, le=1.0, description="Oxygen fraction")  # noqa: E741`
+- Commit 56a6d20 in src/dwsim_model/analysis/sweep.py: Potential CI/CD bypass `row["error"] = str(exc)  # type: ignore[assignment]`
+- Commit 56a6d20 in src/dwsim_model/analysis/sweep.py: Potential CI/CD bypass `row["converged"] = kpi_dict.get("converged", None)  # type: ignore[assignment]`
+- Commit 67b45ac in tests/test_biomass_decomposer.py: Potential CI/CD bypass `feed = BiomassFeed.__new__(BiomassFeed)  # bypass __post_init__`
+- Commit bc0fed7 in fix_clr.py: Potential CI/CD bypass `text = text.replace("import clr", "import clr  # noqa: F401")`
+- Commit 67b45ac in src/dwsim_model/analysis/sweep.py: Potential CI/CD bypass `# Inject the patched config dict directly so we bypass file I/O`
 
 ## Recommendations
-- **CRITICAL**: Address silent failures and `safe_connect` workarounds. Instead of ignoring `Exception` in property extraction or connection logic, log detailed information, or raise specific `NotImplementedError` or `ValueError` where required.
-- **CRITICAL**: Remove implicit placeholders (the `pass` and "DbC Placeholder").
+- **CRITICAL**: Address placeholders and incomplete implementations.
+- Review mock usages and exception suppressions to ensure they don't hide real issues.
