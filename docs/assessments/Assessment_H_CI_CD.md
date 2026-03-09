@@ -1,6 +1,5 @@
-# Assessment H_CI_CD
+# Assessment: CI_CD
 
 ## Grade: 8/10
 
-### Assessment Notes
-- Extensive GitHub actions workflows exist (`.github/workflows/*`), covering standard CI, documentation, tests, and various agent workflows.
+Notes: Based on automated review.

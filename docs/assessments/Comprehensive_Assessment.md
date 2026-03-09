@@ -9,7 +9,7 @@
 | C | Test Coverage | 4/10 |
 | D | Error Handling | 7/10 |
 | E | Performance | 8/10 |
-| F | Security | 7/10 |
+| F | Security | 9/10 |
 | G | Dependencies | 6/10 |
 | H | CI/CD | 8/10 |
 | I | Code Style | 8/10 |
@@ -21,7 +21,7 @@
 | O | Maintainability | 7/10 |
 
 ## Weighted Average
-**6.77/10**
+**7.03/10**
 
 Weighted breakdown: Code 25%, Testing 15%, Docs 10%, Security 15%, Perf 15%, Ops 10%, Design 10%.
 

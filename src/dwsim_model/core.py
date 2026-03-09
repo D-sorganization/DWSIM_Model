@@ -96,8 +96,8 @@ class FlowsheetBuilder:
             if hasattr(obj, "GraphicObject") and obj.GraphicObject is not None:
                 try:
                     obj.GraphicObject.ShowObjectData = True
-                except Exception:
-                    pass
+                except Exception as exc:
+                    logger.debug(f"Exception setting GraphicObject.ShowObjectData: {exc}")  # AUTO-FIXED
 
             if obj_type_name == "MaterialStream":
                 self.materials[name] = obj
