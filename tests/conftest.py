@@ -73,6 +73,7 @@ FILE_MARKERS = {
     "test_config_loader.py": ("contract",),
     "test_gasification_build.py": ("contract",),
     "test_sweep.py": ("contract",),
+    "test_topology.py": ("contract",),
     "test_acceptance_baseline.py": ("acceptance", "integration"),
     "test_gasification_module.py": ("dwsim", "integration"),
     "test_standalone.py": ("dwsim", "integration"),
