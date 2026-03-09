@@ -128,6 +128,7 @@ class GasificationFlowsheet:
 
         b = self.builder
         rtypes = self._get_reactor_types()
+        connection_failures: list[str] = []
 
         # ──────────────────────────────────────────────────────────────────────
         # 1. Downdraft / Pre-Gasifier
@@ -247,10 +248,12 @@ class GasificationFlowsheet:
             except Exception as exc:
                 src_name = getattr(src, "Name", str(src))
                 tgt_name = getattr(tgt, "Name", str(tgt))
-                logger.warning(
-                    f"Failed to connect {src_name} → {tgt_name} "
-                    f"(ports {p1}→{p2}): {exc}"
+                message = (
+                    f"Failed to connect {src_name} -> {tgt_name} "
+                    f"(ports {p1}->{p2}): {exc}"
                 )
+                connection_failures.append(message)
+                logger.error(message)
 
         # Gasifier mixing
         safe_connect(feed_biomass, gas_in_mixer, 0, 0)
@@ -338,6 +341,12 @@ class GasificationFlowsheet:
         safe_connect(blower, product, 0, 0)
         safe_connect(e_blower, blower, 0, 1)
 
+        if connection_failures:
+            raise RuntimeError(
+                "Critical flowsheet connections failed:\n"
+                + "\n".join(f"- {failure}" for failure in connection_failures)
+            )
+
         # ──────────────────────────────────────────────────────────────────────
         # Post-connection configuration
         # ──────────────────────────────────────────────────────────────────────
@@ -373,21 +382,23 @@ class GasificationFlowsheet:
                 configure_gasifier(ops["Downdraft_Gasifier"], self.builder.sim)
                 logger.info("Gasifier reactions configured.")
             except Exception as exc:
-                logger.warning(f"Could not configure Gasifier reactions: {exc}")
+                raise RuntimeError(
+                    f"Gasifier reactor configuration failed: {exc}"
+                ) from exc
 
         if "PEM_Reactor" in ops:
             try:
                 configure_pem(ops["PEM_Reactor"], self.builder.sim)
                 logger.info("PEM reactions configured.")
             except Exception as exc:
-                logger.warning(f"Could not configure PEM reactions: {exc}")
+                raise RuntimeError(f"PEM reactor configuration failed: {exc}") from exc
 
         if "TRC_Reactor" in ops:
             try:
                 configure_trc(ops["TRC_Reactor"], self.builder.sim)
                 logger.info("TRC reactor configured.")
             except Exception as exc:
-                logger.warning(f"Could not configure TRC reactor: {exc}")
+                raise RuntimeError(f"TRC reactor configuration failed: {exc}") from exc
 
     # ──────────────────────────────────────────────────────────────────────────
     # Config loading  (BUG FIX: was passing b.energies, now b.energy_streams)
@@ -399,11 +410,10 @@ class GasificationFlowsheet:
         try:
             loader = ConfigLoader(config_path=self.config_path)
             loader.load()
-            # FIX: was `b.energies` — correct attribute is `b.energy_streams`
             loader.apply_to_flowsheet(b, b.materials, b.energy_streams)
             logger.info("External config applied successfully.")
         except Exception as exc:
-            logger.error(f"Failed to apply external config: {exc}")
+            raise RuntimeError(f"Failed to apply external config: {exc}") from exc
 
     # ──────────────────────────────────────────────────────────────────────────
     # Run

@@ -74,3 +74,43 @@ def test_custom_reactor_modes():
     rtypes_custom = gf_custom._get_reactor_types()
     assert rtypes_custom["pem"] == "RCT_Gibbs"
     assert rtypes_custom["gasifier"] == "RCT_Conversion"
+
+
+def test_build_flowsheet_fails_when_critical_connection_fails(monkeypatch):
+    gf = GasificationFlowsheet(builder=FlowsheetBuilder(), mode=ReactorMode.MIXED)
+
+    def fail_connect(*_args, **_kwargs):
+        raise RuntimeError("connect failed")
+
+    monkeypatch.setattr(gf.builder, "connect", fail_connect)
+
+    with pytest.raises(RuntimeError, match="Critical flowsheet connections failed"):
+        gf.build_flowsheet()
+
+
+def test_build_flowsheet_fails_when_reactor_configuration_fails(monkeypatch):
+    import dwsim_model.chemistry.reactions as reactions
+
+    gf = GasificationFlowsheet(builder=FlowsheetBuilder(), mode=ReactorMode.MIXED)
+
+    def fail_gasifier(*_args, **_kwargs):
+        raise RuntimeError("gasifier setup failed")
+
+    monkeypatch.setattr(reactions, "configure_gasifier", fail_gasifier)
+
+    with pytest.raises(RuntimeError, match="Gasifier reactor configuration failed"):
+        gf.build_flowsheet()
+
+
+def test_build_flowsheet_fails_when_config_application_fails(monkeypatch):
+    from dwsim_model.config_loader import ConfigLoader
+
+    gf = GasificationFlowsheet(builder=FlowsheetBuilder(), mode=ReactorMode.MIXED)
+
+    def fail_apply(self, *_args, **_kwargs):
+        raise RuntimeError("config apply failed")
+
+    monkeypatch.setattr(ConfigLoader, "apply_to_flowsheet", fail_apply)
+
+    with pytest.raises(RuntimeError, match="Failed to apply external config"):
+        gf.build_flowsheet()

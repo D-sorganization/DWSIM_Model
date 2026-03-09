@@ -298,8 +298,8 @@ class ConfigLoader:
         """Apply T, P, flow, and composition to material streams."""
         for stream_name, props in feeds.items():
             if stream_name not in materials:
-                logger.debug(
-                    f"Stream '{stream_name}' in config not found in flowsheet — skipped."
+                self._errors.append(
+                    f"Stream '{stream_name}' in config not found in flowsheet."
                 )
                 continue
 
@@ -360,10 +360,23 @@ class ConfigLoader:
         """Apply power values to energy streams."""
         for e_name, e_val in energy_config.items():
             if e_name not in energy_streams:
-                logger.debug(f"Energy stream '{e_name}' not in flowsheet — skipped.")
+                self._errors.append(
+                    f"Energy stream '{e_name}' in config not found in flowsheet."
+                )
                 continue
             try:
-                energy_streams[e_name].SetPropertyValue("EnergyFlow", float(e_val))
+                self._set_energy_stream_value(energy_streams[e_name], float(e_val))
                 logger.info(f"Applied {e_val} W to energy stream '{e_name}'.")
             except Exception as exc:
                 self._errors.append(f"Energy stream {e_name}: {exc}")
+
+    @staticmethod
+    def _set_energy_stream_value(stream, value_watts: float) -> None:
+        """Apply an energy flow using the DWSIM property identifier supported by the runtime."""
+        try:
+            stream.SetPropertyValue("PROP_ES_0", value_watts / 1000.0)
+            return
+        except Exception:
+            pass
+
+        stream.SetPropertyValue("EnergyFlow", value_watts)
