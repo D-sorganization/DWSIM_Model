@@ -13,8 +13,15 @@ This tests the sweep *mechanics*:
   - Does it record the requested KPIs?
 """
 
+from types import SimpleNamespace
+
 import pytest
-from dwsim_model.analysis.sweep import ParameterSweep, _set_nested, _get_nested
+from dwsim_model.analysis.sweep import (
+    ParameterSweep,
+    _default_model_runner,
+    _get_nested,
+    _set_nested,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Helper utilities tests
@@ -249,3 +256,54 @@ class TestSensitivityOAT:
         except TypeError:
             # May be a list — count items
             assert sum(1 for _ in result) == 6
+
+
+def test_default_model_runner_passes_compound_set_to_extractor(monkeypatch):
+    observed: dict[str, object] = {}
+
+    class FakeFlowsheet:
+        def __init__(self, runtime_config=None):
+            self.compound_set = ["Hydrogen", "Carbon monoxide"]
+            self.builder = object()
+            self._injected_config = runtime_config
+
+        def build_flowsheet(self):
+            observed["config"] = self._injected_config
+
+        def run(self):
+            observed["ran"] = True
+
+    class FakeExtractor:
+        def __init__(self, compound_names=None, key_streams=None):
+            observed["compound_names"] = compound_names
+
+        def extract(self, builder):
+            observed["builder"] = builder
+            return "results"
+
+    class FakeMetrics:
+        def calculate(self, results):
+            observed["results"] = results
+            return SimpleNamespace(to_dict=lambda: {"cold_gas_efficiency": 0.7})
+
+    monkeypatch.setattr(
+        "dwsim_model.gasification.GasificationFlowsheet",
+        FakeFlowsheet,
+    )
+    monkeypatch.setattr(
+        "dwsim_model.results.extractor.ResultsExtractor",
+        FakeExtractor,
+    )
+    monkeypatch.setattr(
+        "dwsim_model.results.metrics.MetricsCalculator",
+        FakeMetrics,
+    )
+
+    config = {"feeds": {"Gasifier_Biomass_Feed": {"mass_flow_kg_s": 5.0}}}
+
+    metrics = _default_model_runner(config)
+
+    assert metrics["cold_gas_efficiency"] == pytest.approx(0.7)
+    assert observed["config"] == config
+    assert observed["compound_names"] == ["Hydrogen", "Carbon monoxide"]
+    assert observed["results"] == "results"

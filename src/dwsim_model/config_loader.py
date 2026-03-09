@@ -112,12 +112,17 @@ class ConfigLoader:
         default config (see :func:`_find_default_config`).
     """
 
-    def __init__(self, config_path: str | Path | None = None):
+    def __init__(
+        self,
+        config_path: str | Path | None = None,
+        config_data: dict[str, Any] | None = None,
+    ):
         if config_path is not None:
             self.config_path: Path | None = Path(config_path)
         else:
             self.config_path = _find_default_config()
 
+        self._config_data = dict(config_data) if config_data is not None else None
         self.config: dict[str, Any] = {}
         self._errors: list[str] = []
 
@@ -125,6 +130,15 @@ class ConfigLoader:
 
     def load(self) -> dict:
         """Load and return the configuration dictionary."""
+        if self._config_data is not None:
+            self.config = self._resolve_sub_configs(self._config_data)
+            logger.info(
+                "Config loaded from runtime data: "
+                f"{len(self.config.get('feeds', {}))} feed streams, "
+                f"{len(self.config.get('energy_streams', {}))} energy streams."
+            )
+            return self.config
+
         if self.config_path is None or not self.config_path.exists():
             logger.warning(
                 "No config file found — using DWSIM defaults for all streams. "

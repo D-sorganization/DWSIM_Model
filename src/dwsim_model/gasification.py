@@ -54,12 +54,17 @@ class GasificationFlowsheet:
         custom_reactors: dict[str, str] | None = None,
         config_path: str | None = None,
         compound_set: list[str] | None = None,
+        runtime_config: dict | None = None,
     ):
         self.builder = builder or FlowsheetBuilder()
         self.mode = ReactorMode(mode)
         self.custom_reactors = custom_reactors or {}
         self.config_path = config_path  # None → ConfigLoader picks sensible default
         self.compound_set = compound_set or list(COMPOUNDS_STANDARD)
+        self.runtime_config = (
+            dict(runtime_config) if runtime_config is not None else None
+        )
+        self._injected_config = self.runtime_config
         self._is_built = False
 
     # ──────────────────────────────────────────────────────────────────────────
@@ -408,7 +413,11 @@ class GasificationFlowsheet:
         """Apply external config to the flowsheet after connections are built."""
         b = self.builder
         try:
-            loader = ConfigLoader(config_path=self.config_path)
+            runtime_config = self.runtime_config or self._injected_config
+            loader = ConfigLoader(
+                config_path=self.config_path,
+                config_data=runtime_config,
+            )
             loader.load()
             loader.apply_to_flowsheet(b, b.materials, b.energy_streams)
             logger.info("External config applied successfully.")
