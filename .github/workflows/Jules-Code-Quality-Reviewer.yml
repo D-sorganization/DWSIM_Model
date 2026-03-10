@@ -10,7 +10,7 @@ on:
         default: '2'
         type: string
   schedule:
-    - cron: "30 0 * * *"  # Daily at 12:30 AM UTC (overnight window)
+    - cron: "0 8 * * 0,4"  # Daily at 12:30 AM UTC (overnight window)
 
 permissions:
   contents: write
