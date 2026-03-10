@@ -26,7 +26,7 @@ on:
           - 'true'
   schedule:
     # Run daily at 3:00 AM UTC - PRIMARY PRIORITY for tracking key repo issues
-    - cron: "0 3 * * *"
+    - cron: "0 8 * * 0,4"
 
 permissions:
   contents: write

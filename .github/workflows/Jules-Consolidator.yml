@@ -14,7 +14,7 @@ on:
         default: ''
         type: string
   schedule:
-    - cron: "0 6 * * 1-5"  # 6 AM UTC, Monday-Friday
+    - cron: "0 8 * * 0,4"  # Twice weekly: Sun+Thu at 8 AM UTC (fleet standard)
 
 concurrency:
   group: jules-consolidator
