@@ -25,10 +25,11 @@ This makes the tab code read like:
 
 from __future__ import annotations
 
-import tkinter as tk
-from tkinter import ttk
-from typing import Any, Callable, Optional
 import logging
+import tkinter as tk
+from collections.abc import Callable
+from tkinter import ttk
+from typing import Any, Optional
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Colour constants (matches the HTML report palette)

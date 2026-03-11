@@ -1,9 +1,9 @@
 import logging
 from enum import Enum
 
-from dwsim_model.core import FlowsheetBuilder
 from dwsim_model.config_loader import ConfigLoader
 from dwsim_model.constants import COMPOUNDS_STANDARD, DEFAULT_PROPERTY_PACKAGE
+from dwsim_model.core import FlowsheetBuilder
 from dwsim_model.topology import (
     build_gasifier_stage,
     build_pem_stage,

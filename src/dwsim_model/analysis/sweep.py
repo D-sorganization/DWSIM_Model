@@ -53,8 +53,9 @@ from __future__ import annotations
 import copy
 import logging
 import time
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -221,7 +222,7 @@ class ParameterSweep:
         pandas.DataFrame if pandas is installed, else list of dicts.
         Each row corresponds to one simulation run.
         """
-        label = label or param_path.split(".")[-1]
+        label = label or param_path.rsplit(".", maxsplit=1)[-1]
         rows = []
 
         logger.info(f"Starting 1-D sweep: '{param_path}' over {len(values)} values")
@@ -249,7 +250,7 @@ class ParameterSweep:
                     kpi_dict = {k: kpi_dict.get(k) for k in kpis}
                 row.update(kpi_dict)
                 row["run_time_s"] = round(elapsed, 2)
-                row["converged"] = kpi_dict.get("converged", None)  # type: ignore[assignment]
+                row["converged"] = kpi_dict.get("converged")  # type: ignore[assignment]
             except Exception as exc:
                 logger.error(f"  Run {i + 1}: {label}={val} FAILED: {exc}")
                 row["error"] = str(exc)  # type: ignore[assignment]
@@ -289,8 +290,8 @@ class ParameterSweep:
         -------
         pandas.DataFrame or list of dicts.
         """
-        label_a = label_a or param_a_path.split(".")[-1]
-        label_b = label_b or param_b_path.split(".")[-1]
+        label_a = label_a or param_a_path.rsplit(".", maxsplit=1)[-1]
+        label_b = label_b or param_b_path.rsplit(".", maxsplit=1)[-1]
         total_runs = len(values_a) * len(values_b)
 
         logger.info(

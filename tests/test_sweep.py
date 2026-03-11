@@ -16,6 +16,7 @@ This tests the sweep *mechanics*:
 from types import SimpleNamespace
 
 import pytest
+
 from dwsim_model.analysis.sweep import (
     ParameterSweep,
     _default_model_runner,

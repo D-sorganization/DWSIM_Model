@@ -1,13 +1,14 @@
 import os
 import sys
+
 import pytest
 
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
 
-from dwsim_model.gasification import GasificationFlowsheet, ReactorMode
 from dwsim_model.core import FlowsheetBuilder
+from dwsim_model.gasification import GasificationFlowsheet, ReactorMode
 
 
 @pytest.fixture(scope="module")
@@ -89,7 +90,7 @@ def test_build_flowsheet_fails_when_critical_connection_fails(monkeypatch):
 
 
 def test_build_flowsheet_fails_when_reactor_configuration_fails(monkeypatch):
-    import dwsim_model.chemistry.reactions as reactions
+    from dwsim_model.chemistry import reactions
 
     gf = GasificationFlowsheet(builder=FlowsheetBuilder(), mode=ReactorMode.MIXED)
 
