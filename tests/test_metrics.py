@@ -31,10 +31,11 @@ Key interface expected of each energy stream:
   - energy_stream.energy_flow_kW: float
 """
 
-import pytest
 from types import SimpleNamespace
 
-from dwsim_model.results.metrics import MetricsCalculator, GasificationMetrics
+import pytest
+
+from dwsim_model.results.metrics import GasificationMetrics, MetricsCalculator
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Mock helpers
@@ -373,8 +374,8 @@ class TestMetricsFromDecomposer:
 
     def test_full_pipeline_smoke(self):
         from dwsim_model.chemistry.biomass_decomposer import (
-            BiomassFeed,
             BiomassDecomposer,
+            BiomassFeed,
         )
 
         feed = BiomassFeed(

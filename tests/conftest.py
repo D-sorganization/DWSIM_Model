@@ -29,7 +29,7 @@ if not clr_available:
         return mock_interf, mock_obj_type
 
     # Needs to patch early before test collection starts instantiating FlowsheetBuilder
-    import dwsim_model.core as core
+    from dwsim_model import core
 
     core.get_automation = mock_get_automation
 

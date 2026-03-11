@@ -39,7 +39,7 @@ class UltimateAnalysis(BaseModel):
     Cl: float = Field(0.0, ge=0.0, le=0.02, description="Chlorine fraction")
 
     @model_validator(mode="after")
-    def sum_must_be_one(self) -> "UltimateAnalysis":
+    def sum_must_be_one(self) -> UltimateAnalysis:
         total = self.C + self.H + self.O + self.N + self.S + self.Cl
         if abs(total - 1.0) > 0.02:
             raise ValueError(
@@ -57,7 +57,7 @@ class ProximateAnalysis(BaseModel):
     ash: float = Field(..., ge=0.0, le=0.40)
 
     @model_validator(mode="after")
-    def sum_must_be_one(self) -> "ProximateAnalysis":
+    def sum_must_be_one(self) -> ProximateAnalysis:
         total = self.moisture + self.volatile_matter + self.fixed_carbon + self.ash
         if abs(total - 1.0) > 0.02:
             raise ValueError(
@@ -108,7 +108,7 @@ class StreamConfig(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def components_sum_to_one(self) -> "StreamConfig":
+    def components_sum_to_one(self) -> StreamConfig:
         if self.components:
             total = sum(self.components.values())
             if abs(total - 1.0) > 0.05:
@@ -133,7 +133,7 @@ class ReactionEntry(BaseModel):
     conversion: Optional[float] = Field(None, ge=0.0, le=1.0)
     heat_of_reaction_kJ_mol: Optional[float] = None
     type: Optional[str] = None  # "equilibrium" | "kinetic" | "conversion"
-    kinetics: Optional["KineticParameters"] = None
+    kinetics: Optional[KineticParameters] = None
 
 
 class KineticParameters(BaseModel):
@@ -160,7 +160,7 @@ class ReactorConfig(BaseModel):
     reactions: list[ReactionEntry] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def validate_reactor_contract(self) -> "ReactorConfig":
+    def validate_reactor_contract(self) -> ReactorConfig:
         for reaction in self.reactions:
             if self.type == "RCT_Conversion":
                 if reaction.base_component is None:

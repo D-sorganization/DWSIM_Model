@@ -72,9 +72,7 @@ def _validate_mode(mode: str) -> None:
         If mode is not in VALID_MODES.
     """
     if mode not in VALID_MODES:
-        raise ValueError(
-            f"Invalid mode {mode!r}. Valid modes: {sorted(VALID_MODES)}"
-        )
+        raise ValueError(f"Invalid mode {mode!r}. Valid modes: {sorted(VALID_MODES)}")
 
 
 def _extract_standalone_results(builder: Any) -> dict[str, Any]:

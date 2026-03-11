@@ -1,6 +1,7 @@
 import logging
-from dwsim_model.core import FlowsheetBuilder, get_automation
+
 from dwsim_model.constants import COMPOUNDS_STANDARD, DEFAULT_PROPERTY_PACKAGE
+from dwsim_model.core import FlowsheetBuilder, get_automation
 from dwsim_model.topology import build_pem_stage
 
 logger = logging.getLogger(__name__)

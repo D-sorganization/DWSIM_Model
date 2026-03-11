@@ -53,8 +53,9 @@ from __future__ import annotations
 import copy
 import logging
 import time
+from collections.abc import Callable, Sequence
 from pathlib import Path
-from typing import Any, Callable, Optional, Sequence
+from typing import Any, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +250,7 @@ class ParameterSweep:
                     kpi_dict = {k: kpi_dict.get(k) for k in kpis}
                 row.update(kpi_dict)
                 row["run_time_s"] = round(elapsed, 2)
-                row["converged"] = kpi_dict.get("converged", None)  # type: ignore[assignment]
+                row["converged"] = kpi_dict.get("converged")  # type: ignore[assignment]
             except Exception as exc:
                 logger.error(f"  Run {i + 1}: {label}={val} FAILED: {exc}")
                 row["error"] = str(exc)  # type: ignore[assignment]

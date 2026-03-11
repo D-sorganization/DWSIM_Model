@@ -144,6 +144,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 def cmd_sweep(args: argparse.Namespace) -> int:
     """Run a 1-D or 2-D parameter sweep."""
     import numpy as np
+
     from dwsim_model.analysis.sweep import ParameterSweep
 
     logger = logging.getLogger("dwsim_model.cli.sweep")
@@ -156,8 +157,8 @@ def cmd_sweep(args: argparse.Namespace) -> int:
     if args.param_b:
         # 2-D sweep
         logger.info(
-            f"2-D sweep: '{args.param}' × '{args.param_b}' — "
-            f"{args.steps} × {args.steps_b or args.steps} points"
+            f"2-D sweep: '{args.param}' x '{args.param_b}' - "
+            f"{args.steps} x {args.steps_b or args.steps} points"
         )
         values_a = np.linspace(args.min, args.max, args.steps)
         min_b = args.min_b if args.min_b is not None else args.min
@@ -203,6 +204,7 @@ def cmd_sweep(args: argparse.Namespace) -> int:
 def cmd_validate(args: argparse.Namespace) -> int:
     """Validate YAML config files against Pydantic schemas."""
     import yaml
+
     from dwsim_model.config.schema import validate_master_config
 
     logger = logging.getLogger("dwsim_model.cli.validate")

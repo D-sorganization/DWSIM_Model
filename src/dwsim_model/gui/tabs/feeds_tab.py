@@ -17,7 +17,7 @@ from __future__ import annotations
 import tkinter as tk
 from tkinter import ttk
 
-from dwsim_model.gui.widgets import ValidatedEntry, ComboField, SectionFrame
+from dwsim_model.gui.widgets import ComboField, SectionFrame, ValidatedEntry
 
 
 class FeedsTab(ttk.Frame):

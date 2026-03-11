@@ -13,10 +13,10 @@ import pytest
 from pydantic import ValidationError
 
 from dwsim_model.config.schema import (
-    UltimateAnalysis,
-    StreamConfig,
-    ReactorConfig,
     ReactionEntry,
+    ReactorConfig,
+    StreamConfig,
+    UltimateAnalysis,
     validate_master_config,
     validate_stream_config,
 )
@@ -30,7 +30,7 @@ class TestUltimateAnalysis:
 
     def test_valid_analysis_passes(self):
         ua = UltimateAnalysis(C=0.501, H=0.062, O=0.421, N=0.008, S=0.005, Cl=0.003)
-        assert ua.C == pytest.approx(0.501)
+        assert pytest.approx(0.501) == ua.C
 
     def test_fractions_must_sum_to_one(self):
         with pytest.raises(ValidationError, match="sum"):

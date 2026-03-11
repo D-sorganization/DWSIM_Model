@@ -43,17 +43,17 @@ class TestUnitAPIContract:
     def test_all_runners_have_docstrings(self, fn) -> None:
         """All public functions must have docstrings."""
         assert fn.__doc__ is not None, f"{fn.__name__} missing docstring"
-        assert len(fn.__doc__) > MIN_DOCSTRING_LENGTH, (
-            f"{fn.__name__} docstring too short"
-        )
+        assert (
+            len(fn.__doc__) > MIN_DOCSTRING_LENGTH
+        ), f"{fn.__name__} docstring too short"
 
     @pytest.mark.parametrize("fn", [run_gasifier, run_pem, run_trc, run_full_train])
     def test_all_runners_have_return_annotation(self, fn) -> None:
         """All run_* functions must declare return type."""
         sig = inspect.signature(fn)
-        assert sig.return_annotation is not inspect.Parameter.empty, (
-            f"{fn.__name__} missing return type annotation"
-        )
+        assert (
+            sig.return_annotation is not inspect.Parameter.empty
+        ), f"{fn.__name__} missing return type annotation"
 
     # ──────────────────────────────────────────────────────────────────────
     # DbC: Input validation
