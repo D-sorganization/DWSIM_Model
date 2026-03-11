@@ -222,7 +222,7 @@ class ParameterSweep:
         pandas.DataFrame if pandas is installed, else list of dicts.
         Each row corresponds to one simulation run.
         """
-        label = label or param_path.split(".")[-1]
+        label = label or param_path.rsplit(".", maxsplit=1)[-1]
         rows = []
 
         logger.info(f"Starting 1-D sweep: '{param_path}' over {len(values)} values")
@@ -290,8 +290,8 @@ class ParameterSweep:
         -------
         pandas.DataFrame or list of dicts.
         """
-        label_a = label_a or param_a_path.split(".")[-1]
-        label_b = label_b or param_b_path.split(".")[-1]
+        label_a = label_a or param_a_path.rsplit(".", maxsplit=1)[-1]
+        label_b = label_b or param_b_path.rsplit(".", maxsplit=1)[-1]
         total_runs = len(values_a) * len(values_b)
 
         logger.info(
